@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CHOP. — CV Tools</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='44' fill='none' stroke='%23B4382A' stroke-width='7'/%3E%3Ctext x='50' y='64' font-size='44' text-anchor='middle' fill='%23B4382A' font-family='Georgia,serif' font-weight='700'%3EC%3C/text%3E%3C/svg%3E">
+<meta name="description" content="Free CV check for job seekers in Singapore — instant feedback on your resume, plus paid resume polish and job-fit analysis.">
+<meta property="og:title" content="CV Tools — CHOP.">
+<meta property="og:description" content="Free CV check for job seekers in Singapore — instant feedback on your resume, plus paid resume polish and job-fit analysis.">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=IBM+Plex+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#0F2B3D; --navy-2:#163A4F; --navy-3:#0A1F2C;
+    --paper:#F5EFE0; --paper-line:#D8CDB0; --paper-2:#EDE4CD;
+    --brass:#C79A3D; --brass-soft:#DDBB74;
+    --stamp:#B4382A; --stamp-dark:#8F2A1F;
+    --ink:#1C1B19; --ink-soft:#5B5648; --mint:#3F6B4C;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--navy);color:var(--paper);font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased;}
+  a{color:inherit;text-decoration:none;}
+  header{display:flex;align-items:center;justify-content:space-between;padding:26px 6vw;}
+  .logo{font-family:'Fraunces',serif;font-weight:700;font-size:24px;}
+  .logo span{color:var(--brass);}
+  .back{font-family:'IBM Plex Mono',monospace;font-size:13px;opacity:0.75;}
+  .back:hover{opacity:1;}
+  .section-wrap{max-width:920px;margin:0 auto;padding:2vh 6vw 8vh;}
+  .section-label{font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:0.14em;color:var(--brass-soft);text-transform:uppercase;text-align:center;margin-bottom:10px;}
+  h1.section-title{font-family:'Fraunces',serif;font-weight:600;font-size:clamp(28px,4vw,40px);text-align:center;margin:0 0 12px;}
+  p.section-sub{text-align:center;color:#C9C0A9;max-width:56ch;margin:0 auto 44px;font-size:15.5px;line-height:1.6;}
+
+  .passbook{background:var(--paper);color:var(--ink);border-radius:4px;box-shadow:0 40px 80px -30px rgba(0,0,0,0.6);overflow:hidden;}
+  .perforation{height:22px;background:repeating-linear-gradient(90deg, var(--navy) 0 7px, transparent 7px 16px);}
+  .passbook-inner{padding:38px 42px 42px;}
+  @media (max-width:640px){ .passbook-inner{padding:26px 20px 32px;} }
+  .pb-topline{display:flex;justify-content:space-between;align-items:baseline;font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--ink-soft);border-bottom:2px solid var(--ink);padding-bottom:14px;margin-bottom:20px;letter-spacing:0.04em;}
+  .pb-topline .book-title{font-family:'Fraunces',serif;font-weight:600;font-size:19px;color:var(--ink);letter-spacing:0;}
+
+  .cv-textarea{
+    width:100%;min-height:220px;border:1px solid var(--paper-line);background:var(--paper-2);border-radius:3px;
+    font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--ink);padding:16px;outline:none;resize:vertical;line-height:1.6;
+  }
+  .cv-textarea:focus{border-color:var(--stamp);}
+  .cv-label{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:0.06em;color:var(--ink-soft);text-transform:uppercase;margin-bottom:8px;display:block;}
+  .cv-btn{
+    font-family:'IBM Plex Mono',monospace;font-size:13.5px;background:var(--stamp);color:#FBF0E7;border:none;
+    padding:13px 24px;border-radius:2px;cursor:pointer;margin-top:16px;transition:background .2s;
+  }
+  .cv-btn:hover{background:var(--stamp-dark);}
+
+  .check-results{margin-top:24px;border-top:2px solid var(--ink);padding-top:16px;display:none;}
+  .check-row{display:flex;align-items:flex-start;gap:12px;padding:10px 0;border-bottom:1px dashed var(--paper-line);}
+  .check-row .icon{font-size:16px;flex-shrink:0;width:22px;}
+  .check-row .txt{font-size:13.5px;line-height:1.5;}
+  .check-row .txt b{color:var(--ink);}
+  .check-score{font-family:'Fraunces',serif;font-weight:600;font-size:30px;color:var(--mint);margin-top:6px;}
+  .check-score.mid{color:var(--brass);}
+  .check-score.low{color:var(--stamp-dark);}
+  .ledger-row{display:flex;justify-content:space-between;align-items:baseline;padding:9px 0;border-bottom:1px dashed var(--paper-line);font-family:'IBM Plex Mono',monospace;font-size:13px;}
+  .ledger-row .desc{color:var(--ink-soft);}
+  .ledger-row .amt{font-weight:600;color:var(--ink);}
+
+  .pb-hint{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--ink-soft);margin-top:16px;opacity:0.85;line-height:1.6;}
+
+  .tabs-row{max-width:920px;margin:38px auto 0;display:flex;gap:10px;flex-wrap:wrap;justify-content:center;}
+  .tab-chip{font-family:'IBM Plex Mono',monospace;font-size:12.5px;padding:11px 18px;border-radius:20px;border:1px solid rgba(245,239,224,0.22);color:var(--paper);opacity:0.85;display:flex;align-items:center;gap:8px;}
+  .tab-chip.active{background:var(--brass);color:var(--navy-3);border-color:var(--brass);opacity:1;font-weight:600;}
+  .tab-chip .soon{font-size:9.5px;background:rgba(245,239,224,0.14);padding:2px 6px;border-radius:8px;}
+  .tab-chip .paid{font-size:9.5px;background:var(--brass);color:var(--navy-3);padding:2px 6px;border-radius:8px;font-weight:700;}
+
+  /* ---------- PREMIUM ---------- */
+  .premium-block{margin-top:44px;background:var(--navy-2);border-radius:4px;padding:2px;position:relative;overflow:hidden;}
+  .premium-inner{background:var(--paper);color:var(--ink);border-radius:3px;padding:34px 36px;position:relative;}
+  @media (max-width:640px){ .premium-inner{padding:26px 20px;} }
+  .premium-badge{display:inline-flex;align-items:center;gap:6px;font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:0.08em;background:var(--brass);color:var(--navy-3);padding:4px 10px;border-radius:12px;font-weight:700;margin-bottom:14px;}
+  .sgd-badge{display:inline-flex;align-items:center;gap:7px;font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:0.08em;background:var(--stamp);color:#FBF0E7;padding:5px 12px;border-radius:3px;font-weight:700;margin-bottom:12px;text-transform:uppercase;}
+  .sgd-badge .sgd-flag{font-size:11px;}
+  .premium-title{font-family:'Fraunces',serif;font-weight:600;font-size:22px;margin:0 0 8px;}
+  .premium-sub{font-size:14px;color:var(--ink-soft);line-height:1.6;margin:0 0 24px;max-width:56ch;}
+  .locked-fields{position:relative;}
+  .locked-fields .cv-textarea, .locked-fields .field-grid{filter:blur(3.5px);opacity:0.55;pointer-events:none;user-select:none;}
+  .locked-overlay{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:14px;padding:20px;}
+  .locked-overlay .lock-icon{font-size:22px;}
+  .locked-overlay p{font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--ink-soft);max-width:40ch;margin:0;}
+  .premium-cta{font-family:'IBM Plex Mono',monospace;font-size:13.5px;letter-spacing:0.03em;background:var(--stamp);color:#FBF0E7;border:none;padding:14px 26px;border-radius:2px;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:8px;transition:background .2s;}
+  .premium-cta:hover{background:var(--stamp-dark);}
+  .premium-price{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--ink-soft);margin-top:10px;}
+  .field-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  @media (max-width:640px){ .field-grid{grid-template-columns:1fr;} }
+
+  footer{border-top:1px solid rgba(245,239,224,0.12);padding:34px 6vw;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:#9C927C;}
+
+  .fb-btn{position:fixed;right:24px;bottom:24px;z-index:50;font-family:'IBM Plex Mono',monospace;font-size:12.5px;letter-spacing:0.04em;background:var(--stamp);color:#FBF0E7;border:none;padding:13px 20px;border-radius:24px;cursor:pointer;box-shadow:0 12px 30px -10px rgba(0,0,0,0.6);display:flex;align-items:center;gap:8px;transition:transform .15s, background .2s;}
+  .fb-btn:hover{background:var(--stamp-dark);transform:translateY(-2px);}
+  .fb-overlay{position:fixed;inset:0;background:rgba(10,31,44,0.72);z-index:60;display:none;align-items:center;justify-content:center;padding:20px;}
+  .fb-overlay.show{display:flex;}
+  .fb-card{background:var(--paper);color:var(--ink);border-radius:4px;max-width:420px;width:100%;box-shadow:0 40px 80px -20px rgba(0,0,0,0.6);overflow:hidden;}
+  .fb-card .perforation{height:16px;background:repeating-linear-gradient(90deg, var(--navy) 0 6px, transparent 6px 13px);}
+  .fb-card-inner{padding:26px 26px 24px;}
+  .fb-card-title{font-family:'Fraunces',serif;font-weight:600;font-size:19px;margin:0 0 6px;}
+  .fb-card-sub{font-size:13px;color:var(--ink-soft);margin:0 0 18px;line-height:1.5;}
+  .fb-field{margin-bottom:14px;}
+  .fb-field label{display:block;font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:0.06em;color:var(--ink-soft);text-transform:uppercase;margin-bottom:6px;}
+  .fb-field select, .fb-field textarea, .fb-field input{width:100%;border:1px solid var(--paper-line);background:var(--paper-2);border-radius:2px;font-family:'Inter',sans-serif;font-size:13.5px;color:var(--ink);padding:10px 12px;outline:none;box-sizing:border-box;}
+  .fb-field select{-webkit-appearance:none;appearance:none;font-family:'IBM Plex Mono',monospace;}
+  .fb-field textarea{resize:vertical;min-height:80px;font-family:'Inter',sans-serif;}
+  .fb-field select:focus, .fb-field textarea:focus, .fb-field input:focus{border-color:var(--stamp);}
+  .fb-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:6px;}
+  .fb-cancel{font-family:'IBM Plex Mono',monospace;font-size:12.5px;background:transparent;border:none;color:var(--ink-soft);cursor:pointer;padding:10px 14px;}
+  .fb-submit{font-family:'IBM Plex Mono',monospace;font-size:12.5px;background:var(--stamp);color:#FBF0E7;border:none;border-radius:2px;padding:11px 18px;cursor:pointer;}
+  .fb-submit:hover{background:var(--stamp-dark);}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">CHOP<span>.</span></div>
+  <a class="back" href="index.html">← Back home</a>
+</header>
+
+<div class="section-wrap">
+  <div class="section-label">Tool 05 — Free</div>
+  <h1 class="section-title">CV Check</h1>
+  <p class="section-sub">Paste your resume text below for a quick, honest structural check — length, formatting basics, and common red flags recruiters and ATS software both notice.</p>
+
+  <div class="passbook">
+    <div class="perforation"></div>
+    <div class="passbook-inner">
+      <div class="pb-topline">
+        <span class="book-title">CV Ledger</span>
+        <span>QUICK CHECK</span>
+      </div>
+
+      <label class="cv-label">Paste your CV / resume text</label>
+      <textarea class="cv-textarea" id="cvText" placeholder="Paste your resume content here — no need to worry about formatting, just the text."></textarea>
+      <button class="cv-btn" id="checkBtn">Run the check</button>
+
+      <div class="check-results" id="checkResults">
+        <div class="check-score" id="checkScore">—</div>
+        <div id="checkRowsContainer"></div>
+      </div>
+
+      <div class="pb-hint">Your CV text is processed in your browser only — nothing is uploaded or stored.</div>
+    </div>
+  </div>
+
+  <div class="premium-block">
+    <div class="premium-inner">
+      <span class="premium-badge">★ Premium</span>
+      <h2 class="premium-title">CV vs. Job Description Fit</h2>
+      <p class="premium-sub">Paste a job listing from any job site alongside your CV. Get a structured match score and the exact keywords you're missing — not a vague opinion, a real comparison against this specific listing.</p>
+      <div class="locked-fields">
+        <div class="field-grid">
+          <textarea class="cv-textarea" disabled id="jd-cv-text" placeholder="Your CV text (reused from above)" style="min-height:120px;"></textarea>
+          <textarea class="cv-textarea" disabled id="jd-text" placeholder="Paste the job description here" style="min-height:120px;"></textarea>
+        </div>
+
+        <button class="cv-btn" id="jd-calc-btn" disabled style="margin-top:16px;">Check my fit score</button>
+
+        <div id="jd-results" style="display:none;margin-top:20px;border-top:2px solid var(--ink);padding-top:16px;">
+          <div class="check-score" id="jd-score">—</div>
+          <div class="pb-hint" style="margin-top:6px;margin-bottom:12px;" id="jd-score-note"></div>
+          <div class="field-section-label" style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:0.06em;color:var(--brass-soft);text-transform:uppercase;margin:14px 0 8px;">Keywords from the JD your CV is missing</div>
+          <div id="jd-missing-list" style="font-family:'IBM Plex Mono',monospace;font-size:13px;line-height:2;"></div>
+        </div>
+
+        <div class="locked-overlay">
+          <div class="lock-icon">🔒</div>
+          <p>Unlock to see your match score against this specific role, plus the exact keywords and skills your CV is missing.</p>
+          <a class="premium-cta" href="#" id="premiumCta2">Get Premium Access →</a>
+          <div class="premium-price">SGD 5.90 per scan</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="premium-block">
+    <div class="premium-inner">
+      <span class="premium-badge">★ Premium</span>
+      <div class="sgd-badge"><span class="sgd-flag">🇸🇬</span>SGDecision</div>
+      <h2 class="premium-title">Should I Accept This Job?</h2>
+      <p class="premium-sub">Score the offer across salary, commute, benefits, growth, security, and work-life balance — weighted into one number, so the decision isn't just a gut feeling.</p>
+
+      <div class="locked-fields">
+        <div class="field-grid">
+          <div class="field"><label>Current monthly salary</label><div><span class="cur">SGD</span><input type="number" disabled id="job-cur-salary" placeholder="5500" /></div></div>
+          <div class="field"><label>Offered monthly salary</label><div><span class="cur">SGD</span><input type="number" disabled id="job-new-salary" placeholder="6200" /></div></div>
+          <div class="field"><label>One-way commute time</label><div><input type="number" disabled id="job-commute" placeholder="35" style="width:70px;" /><span class="cur" style="margin-left:4px;">min</span></div></div>
+          <div class="field"><label>Benefits vs. current job</label><div>
+            <select disabled id="job-benefits" style="width:150px;text-align:right;font-family:'IBM Plex Mono',monospace;font-weight:600;border:none;background:transparent;">
+              <option value="1">Much worse</option><option value="2">Worse</option><option value="3">About the same</option><option value="4">Better</option><option value="5">Much better</option>
+            </select>
+          </div></div>
+          <div class="field"><label>Growth / learning opportunity</label><div>
+            <select disabled id="job-growth" style="width:150px;text-align:right;font-family:'IBM Plex Mono',monospace;font-weight:600;border:none;background:transparent;">
+              <option value="1">Poor</option><option value="2">Below average</option><option value="3">Average</option><option value="4">Good</option><option value="5">Excellent</option>
+            </select>
+          </div></div>
+          <div class="field"><label>Job security / company stability</label><div>
+            <select disabled id="job-security" style="width:150px;text-align:right;font-family:'IBM Plex Mono',monospace;font-weight:600;border:none;background:transparent;">
+              <option value="1">Poor</option><option value="2">Below average</option><option value="3">Average</option><option value="4">Good</option><option value="5">Excellent</option>
+            </select>
+          </div></div>
+          <div class="field" style="grid-column:1 / -1;"><label>Work-life balance</label><div>
+            <select disabled id="job-worklife" style="width:150px;text-align:right;font-family:'IBM Plex Mono',monospace;font-weight:600;border:none;background:transparent;">
+              <option value="1">Poor</option><option value="2">Below average</option><option value="3">Average</option><option value="4">Good</option><option value="5">Excellent</option>
+            </select>
+          </div></div>
+        </div>
+
+        <button class="cv-btn" id="job-calc-btn" disabled style="margin-top:16px;">Score this offer</button>
+
+        <div id="job-results" style="display:none;margin-top:20px;border-top:2px solid var(--ink);padding-top:16px;">
+          <div class="check-score" id="job-score">—</div>
+          <div class="pb-hint" style="margin-top:6px;margin-bottom:14px;" id="job-verdict"></div>
+          <div class="ledger-row"><span class="desc">Salary (25%)</span><span class="amt" id="job-b-salary">—</span></div>
+          <div class="ledger-row"><span class="desc">Growth (20%)</span><span class="amt" id="job-b-growth">—</span></div>
+          <div class="ledger-row"><span class="desc">Job security (20%)</span><span class="amt" id="job-b-security">—</span></div>
+          <div class="ledger-row"><span class="desc">Benefits (15%)</span><span class="amt" id="job-b-benefits">—</span></div>
+          <div class="ledger-row"><span class="desc">Work-life balance (10%)</span><span class="amt" id="job-b-worklife">—</span></div>
+          <div class="ledger-row"><span class="desc">Commute (10%)</span><span class="amt" id="job-b-commute">—</span></div>
+        </div>
+
+        <div class="locked-overlay">
+          <div class="lock-icon">🔒</div>
+          <p>Unlock to get a weighted score across all six factors, plus a breakdown of what's pulling the offer up or down.</p>
+          <a class="premium-cta" href="#" id="premiumCta5">Get Premium Access →</a>
+          <div class="premium-price">SGD 3.90 per offer</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="premium-block">
+    <div class="premium-inner">
+      <span class="premium-badge">★ Premium</span>
+      <h2 class="premium-title">Natural-Tone Resume Polish</h2>
+      <p class="premium-sub">Get your resume rewritten to read naturally and professionally — stronger action verbs, tighter phrasing, and a tone that sounds like you, not a template. Uses the CV text pasted in the Free CV Check above.</p>
+      <div class="locked-fields">
+        <textarea class="cv-textarea" disabled id="polish-output" placeholder="Your polished resume will appear here after unlocking..." style="min-height:140px;"></textarea>
+        <button class="cv-btn" id="polish-run-btn" disabled style="margin-top:16px;">Polish my resume</button>
+        <div id="polish-error" class="pb-hint" style="display:none;color:var(--stamp-dark);margin-top:8px;"></div>
+        <div class="locked-overlay">
+          <div class="lock-icon">🔒</div>
+          <p>Unlock to get a rewritten version of your resume — clearer, more natural phrasing, ready to copy into your CV.</p>
+          <a class="premium-cta" href="#" id="premiumCta1">Get Premium Access →</a>
+          <div class="premium-price">SGD 5.90, one-time</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="tabs-row">
+    <a class="tab-chip" href="chop-income.html" style="text-decoration:none;">Income &amp; Spend</a>
+    <a class="tab-chip" href="chop-cpf.html" style="text-decoration:none;">CPF Contribution</a>
+    <a class="tab-chip" href="chop-car-loan.html" style="text-decoration:none;">Car Loan</a>
+    <a class="tab-chip" href="chop-hdb.html" style="text-decoration:none;">HDB Affordability</a>
+    <a class="tab-chip" href="chop-stamp-duty.html" style="text-decoration:none;">Stamp Duty</a>
+    <a class="tab-chip" href="chop-income-tax.html" style="text-decoration:none;">Income Tax</a>
+    <a class="tab-chip" href="chop-housing-grants.html" style="text-decoration:none;">Housing Grants</a>
+    <div class="tab-chip active">CV Tools</div>
+    <a class="tab-chip" href="chop-planner.html" style="text-decoration:none;">Financial Planner <span class="paid">paid</span></a>
+  </div>
+</div>
+
+<footer>A Singapore money toolkit — free tools, honest maths, no long story. · <a href="chop-terms.html" style="text-decoration:underline;">Terms & Disclaimer</a></footer>
+
+<script>
+  const cvTextEl = document.getElementById('cvText');
+  const checkBtn = document.getElementById('checkBtn');
+  const checkResults = document.getElementById('checkResults');
+  const checkScore = document.getElementById('checkScore');
+  const checkRowsContainer = document.getElementById('checkRowsContainer');
+
+  const ACTION_VERBS = ['led','managed','built','created','developed','designed','launched','improved','increased','reduced','delivered','implemented','drove','achieved','coordinated','analysed','analyzed','optimised','optimized','negotiated','executed','streamlined','spearheaded','established','generated'];
+
+  function runCheck(){
+    const text = cvTextEl.value.trim();
+    if(!text){ cvTextEl.focus(); return; }
+
+    const words = text.split(/\s+/).filter(Boolean);
+    const wordCount = words.length;
+    const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
+    const bulletLines = lines.filter(l => /^[-•*]/.test(l) || /^\d+[\.\)]/.test(l));
+
+    const hasEmail = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/.test(text);
+    const hasPhone = /(\+?65[\s-]?)?[689]\d{3}[\s-]?\d{4}/.test(text) || /\d{8,}/.test(text.replace(/\s/g,''));
+
+    let actionVerbBullets = 0;
+    bulletLines.forEach(l => {
+      const firstWord = l.replace(/^[-•*\d\.\)\s]+/, '').split(/\s+/)[0]?.toLowerCase().replace(/[^a-z]/g,'');
+      if(ACTION_VERBS.includes(firstWord)) actionVerbBullets++;
+    });
+
+    const passiveMatches = (text.match(/\b(was|were|been|being)\s+\w+ed\b/gi) || []).length;
+
+    const rows = [];
+    let score = 0;
+    const maxScore = 5;
+
+    // 1. Length check
+    if(wordCount < 150){
+      rows.push({icon:'⚠', txt: `<b>Quite short</b> (${wordCount} words) — most resumes run 400–800 words for a few years of experience. May be reading as thin to recruiters.`});
+    } else if(wordCount > 1200){
+      rows.push({icon:'⚠', txt: `<b>Quite long</b> (${wordCount} words) — consider trimming to the most relevant achievements; recruiters spend seconds, not minutes, on a first pass.`});
+    } else {
+      rows.push({icon:'✓', txt: `<b>Good length</b> (${wordCount} words) — sits in a reasonable range for most resumes.`}); score++;
+    }
+
+    // 2. Contact info
+    if(hasEmail){
+      rows.push({icon:'✓', txt: `<b>Email found</b> — good, recruiters and ATS need this to reach you.`}); score++;
+    } else {
+      rows.push({icon:'⚠', txt: `<b>No email detected</b> — make sure your contact details are clearly included, not just in a header image (which ATS software can't read).`});
+    }
+
+    // 3. Bullet structure
+    if(bulletLines.length >= 3){
+      rows.push({icon:'✓', txt: `<b>${bulletLines.length} bullet points detected</b> — good, bulleted achievements scan better than paragraphs.`}); score++;
+    } else {
+      rows.push({icon:'⚠', txt: `<b>Few or no bullet points detected</b> — consider breaking dense paragraphs into scannable bullets, one achievement per line.`});
+    }
+
+    // 4. Action verbs
+    if(bulletLines.length > 0){
+      const pct = Math.round((actionVerbBullets / bulletLines.length) * 100);
+      if(pct >= 50){
+        rows.push({icon:'✓', txt: `<b>${pct}% of bullets start with a strong action verb</b> (e.g. "Led", "Built", "Delivered") — good, this reads as active and results-oriented.`}); score++;
+      } else {
+        rows.push({icon:'⚠', txt: `<b>Only ${pct}% of bullets start with an action verb</b> — try opening each line with what you did ("Led...", "Reduced...", "Built...") rather than "Responsible for...".`});
+      }
+    }
+
+    // 5. Passive voice
+    if(passiveMatches <= 2){
+      rows.push({icon:'✓', txt: `<b>Passive voice looks under control</b> (${passiveMatches} instance${passiveMatches===1?'':'s'} detected) — active phrasing generally reads stronger.`}); score++;
+    } else {
+      rows.push({icon:'⚠', txt: `<b>${passiveMatches} instances of passive voice detected</b> (e.g. "was responsible for") — rephrasing to active voice ("led", "managed") usually reads more confidently.`});
+    }
+
+    checkRowsContainer.innerHTML = rows.map(r => `<div class="check-row"><span class="icon">${r.icon}</span><span class="txt">${r.txt}</span></div>`).join('');
+
+    checkScore.textContent = `${score}/${maxScore}`;
+    checkScore.className = 'check-score' + (score >= 4 ? '' : score >= 2 ? ' mid' : ' low');
+
+    checkResults.style.display = 'block';
+  }
+
+  checkBtn.addEventListener('click', runCheck);
+
+  // TODO: replace with your real HitPay payment link(s) once your account is approved
+  // ---------- CV vs. JD Fit Analysis (Premium) ----------
+  const JD_STOPWORDS = new Set(['the','and','with','our','you','your','will','this','that','for','are','have','has','we','to','of','in','on','a','an','is','be','as','or','at','by','from','it','its','their','they','who','what','when','where','why','how','can','all','any','more','than','into','also','if','not','but','about','across','per','role','job','team','work','working','looking','join','apply','ability','including','across','within','etc','using']);
+
+  function tokenizeJD(text){
+    return text.toLowerCase().match(/[a-z][a-z0-9+.#-]{2,}/g) || [];
+  }
+
+  function keyTermsFromJD(text, topN){
+    const tokens = tokenizeJD(text).filter(t => !JD_STOPWORDS.has(t));
+    const freq = {};
+    tokens.forEach(t => { freq[t] = (freq[t] || 0) + 1; });
+    return Object.entries(freq)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, topN)
+      .map(([word]) => word);
+  }
+
+  document.getElementById('jd-calc-btn').addEventListener('click', function(){
+    const cvText = document.getElementById('jd-cv-text').value || document.getElementById('cvText').value || '';
+    const jdText = document.getElementById('jd-text').value;
+
+    if(!jdText.trim() || !cvText.trim()){
+      alert('Please paste both your CV text and the job description.');
+      return;
+    }
+
+    const jdKeyTerms = keyTermsFromJD(jdText, 25);
+    const cvTokenSet = new Set(tokenizeJD(cvText));
+
+    const found = jdKeyTerms.filter(term => cvTokenSet.has(term));
+    const missing = jdKeyTerms.filter(term => !cvTokenSet.has(term));
+
+    const scorePct = jdKeyTerms.length ? Math.round((found.length / jdKeyTerms.length) * 100) : 0;
+
+    const scoreEl = document.getElementById('jd-score');
+    scoreEl.textContent = `${scorePct}%`;
+    scoreEl.className = 'check-score' + (scorePct >= 70 ? '' : scorePct >= 40 ? ' mid' : ' low');
+
+    document.getElementById('jd-score-note').textContent =
+      scorePct >= 70 ? "Strong overlap — your CV already reflects most of this role's key terms."
+      : scorePct >= 40 ? "Partial overlap — worth weaving in a few more of the missing terms below where genuinely true of your experience."
+      : "Low overlap — this CV may need real tailoring for this specific role, not just keyword tweaks.";
+
+    document.getElementById('jd-missing-list').innerHTML = missing.length
+      ? missing.slice(0, 12).map(w => `<span style="display:inline-block;background:var(--paper-2);border:1px solid var(--paper-line);border-radius:12px;padding:4px 10px;margin:3px 4px 3px 0;">${w}</span>`).join('')
+      : '<span>None — great overlap!</span>';
+
+    document.getElementById('jd-results').style.display = 'block';
+  });
+
+  // ---------- Should I Accept This Job? (Premium) ----------
+  function salaryScore(pctChange){
+    if(pctChange >= 20) return 10;
+    if(pctChange >= 10) return 8;
+    if(pctChange >= 0) return 6;
+    if(pctChange >= -10) return 3;
+    return 1;
+  }
+  function commuteScore(mins){
+    if(mins <= 20) return 10;
+    if(mins <= 30) return 9;
+    if(mins <= 45) return 7;
+    if(mins <= 60) return 5;
+    if(mins <= 75) return 3;
+    return 1;
+  }
+
+  document.getElementById('job-calc-btn').addEventListener('click', function(){
+    const curSalary = parseFloat(document.getElementById('job-cur-salary').value) || 0;
+    const newSalary = parseFloat(document.getElementById('job-new-salary').value) || 0;
+    const commute = parseFloat(document.getElementById('job-commute').value) || 0;
+    const benefits = parseInt(document.getElementById('job-benefits').value) * 2; // 1-5 -> 0-10
+    const growth = parseInt(document.getElementById('job-growth').value) * 2;
+    const security = parseInt(document.getElementById('job-security').value) * 2;
+    const worklife = parseInt(document.getElementById('job-worklife').value) * 2;
+
+    const pctChange = curSalary > 0 ? ((newSalary - curSalary) / curSalary) * 100 : 0;
+    const salaryPts = salaryScore(pctChange);
+    const commutePts = commuteScore(commute);
+
+    const WEIGHTS = { salary: 0.25, growth: 0.20, security: 0.20, benefits: 0.15, worklife: 0.10, commute: 0.10 };
+    const total = salaryPts*WEIGHTS.salary + growth*WEIGHTS.growth + security*WEIGHTS.security
+                + benefits*WEIGHTS.benefits + worklife*WEIGHTS.worklife + commutePts*WEIGHTS.commute;
+
+    const scoreEl = document.getElementById('job-score');
+    scoreEl.textContent = `${total.toFixed(1)} / 10`;
+    scoreEl.className = 'check-score' + (total >= 7.5 ? '' : total >= 5.5 ? ' mid' : ' low');
+
+    let verdict;
+    if(total >= 7.5) verdict = "Strong offer — the factors that matter most here are pulling in your favour.";
+    else if(total >= 5.5) verdict = "Decent, but mixed — worth weighing which of these factors matter most to you personally before deciding.";
+    else verdict = "Weaker offer on paper — if you're still considering it, it's probably for a reason not captured here (e.g. urgency to leave your current role).";
+    document.getElementById('job-verdict').textContent = verdict;
+
+    document.getElementById('job-b-salary').textContent = `${salaryPts}/10 (${pctChange >= 0 ? '+' : ''}${pctChange.toFixed(1)}%)`;
+    document.getElementById('job-b-growth').textContent = `${growth}/10`;
+    document.getElementById('job-b-security').textContent = `${security}/10`;
+    document.getElementById('job-b-benefits').textContent = `${benefits}/10`;
+    document.getElementById('job-b-worklife').textContent = `${worklife}/10`;
+    document.getElementById('job-b-commute').textContent = `${commutePts}/10 (${commute} min)`;
+
+    document.getElementById('job-results').style.display = 'block';
+  });
+
+
+  // ---------- Natural-Tone Resume Polish (Premium, AI-powered) ----------
+  document.getElementById('polish-run-btn').addEventListener('click', async function(){
+    const btn = this;
+    const output = document.getElementById('polish-output');
+    const errorEl = document.getElementById('polish-error');
+    const resumeText = cvTextEl.value.trim();
+
+    errorEl.style.display = 'none';
+
+    if(!resumeText){
+      errorEl.textContent = 'Please paste your CV text in the Free CV Check box above first.';
+      errorEl.style.display = 'block';
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Polishing…';
+    output.value = '';
+
+    try {
+      const resp = await fetch('/.netlify/functions/polish-resume', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ resumeText }),
+      });
+      const data = await resp.json();
+
+      if(!resp.ok){
+        throw new Error(data.error || 'Something went wrong. Please try again.');
+      }
+
+      output.value = data.polished;
+    } catch(err){
+      errorEl.textContent = err.message || 'Something went wrong. Please try again.';
+      errorEl.style.display = 'block';
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Polish my resume';
+    }
+  });
+
+  // TODO: replace TIER1_LINK and TIER2_LINK with your real Stripe Payment Links once created
+  const TIER1_LINK = "https://buy.stripe.com/8x2bJ39fKb1E0gb8uDb7y04"; // $3.90 tier
+  const TIER2_LINK = "https://buy.stripe.com/bJefZjgIc2v8d2XaCLb7y05"; // $5.90 tier
+
+  function wireCta(id, link){
+    const el = document.getElementById(id);
+    el.addEventListener('click', function(e){
+      e.preventDefault();
+      if(link){
+        window.open(link, '_blank', 'noopener');
+      } else {
+        alert('Premium access isn\'t set up yet — check back soon!');
+      }
+    });
+  }
+
+  // premiumCta1 = Natural-Tone Polish, premiumCta2 = JD Fit Analysis → both $5.90
+  ['premiumCta1', 'premiumCta2'].forEach(id => wireCta(id, TIER2_LINK));
+  // premiumCta5 = Job Offer Scorer → $3.90
+  wireCta('premiumCta5', TIER1_LINK);
+</script>
+
+<a class="fb-btn" href="chop-feedback.html" style="text-decoration:none;">✎ Feedback</a>
+<!-- Cloudflare Web Analytics -->
+<script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "4fcc4037ceb54a8795588df3465c7522"}'></script>
+</body>
+</html>

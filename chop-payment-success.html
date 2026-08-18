@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CHOP. — Payment Successful</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='44' fill='none' stroke='%23B4382A' stroke-width='7'/%3E%3Ctext x='50' y='64' font-size='44' text-anchor='middle' fill='%23B4382A' font-family='Georgia,serif' font-weight='700'%3EC%3C/text%3E%3C/svg%3E">
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=IBM+Plex+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#0F2B3D; --navy-2:#163A4F; --navy-3:#0A1F2C;
+    --paper:#F5EFE0; --paper-line:#D8CDB0; --paper-2:#EDE4CD;
+    --brass:#C79A3D; --brass-soft:#DDBB74;
+    --stamp:#B4382A; --stamp-dark:#8F2A1F;
+    --ink:#1C1B19; --ink-soft:#5B5648; --mint:#3F6B4C;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--navy);color:var(--paper);font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased;min-height:100vh;display:flex;flex-direction:column;}
+  a{color:inherit;text-decoration:none;}
+  header{display:flex;align-items:center;justify-content:space-between;padding:26px 6vw;}
+  .logo{font-family:'Fraunces',serif;font-weight:700;font-size:24px;}
+  .logo span{color:var(--brass);}
+  .wrap{max-width:560px;margin:6vh auto;padding:0 6vw;flex:1;}
+  .card{background:var(--paper);color:var(--ink);border-radius:4px;box-shadow:0 40px 80px -30px rgba(0,0,0,0.6);overflow:hidden;text-align:center;}
+  .perforation{height:20px;background:repeating-linear-gradient(90deg, var(--navy) 0 7px, transparent 7px 16px);}
+  .inner{padding:44px 34px;}
+  .icon{font-size:44px;margin-bottom:16px;}
+  h1{font-family:'Fraunces',serif;font-weight:600;font-size:24px;margin:0 0 10px;}
+  p{color:var(--ink-soft);font-size:14.5px;line-height:1.6;margin:0 0 8px;}
+  .links{margin-top:26px;display:flex;flex-direction:column;gap:10px;}
+  .links a{display:block;background:var(--stamp);color:#FBF0E7;font-family:'IBM Plex Mono',monospace;font-size:13.5px;padding:13px 18px;border-radius:2px;transition:background .2s;}
+  .links a:hover{background:var(--stamp-dark);}
+  .back-home{margin-top:22px;display:inline-block;font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--ink-soft);text-decoration:underline;}
+  footer{padding:34px 6vw;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:#9C927C;}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">CHOP<span>.</span></div>
+</header>
+
+<div class="wrap">
+  <div class="card">
+    <div class="perforation"></div>
+    <div class="inner" id="content">
+      <div class="icon">⏳</div>
+      <h1>Confirming your payment…</h1>
+      <p>Hang tight, this only takes a second.</p>
+    </div>
+  </div>
+</div>
+
+<footer>A Singapore money toolkit — free tools, honest maths, no long story.</footer>
+
+<script src="unlock.js"></script>
+<script>
+  const TIER_TOOLS = {
+    '1': [
+      { label: 'Car Running Cost / Lease vs Buy', href: 'chop-car-loan.html' },
+      { label: 'Should I Accept This Job?', href: 'chop-cv.html' },
+    ],
+    '2': [
+      { label: 'CPF Retirement Projector', href: 'chop-cpf.html' },
+      { label: 'Top Up CPF or Invest?', href: 'chop-cpf.html' },
+      { label: 'Retire at 60 or 65?', href: 'chop-cpf.html' },
+      { label: 'CV vs. Job Description Fit', href: 'chop-cv.html' },
+      { label: 'Natural-Tone Resume Polish', href: 'chop-cv.html' },
+    ],
+    '3': [
+      { label: 'HDB / Property Depreciation & Gains', href: 'chop-hdb.html' },
+    ],
+    '4': [
+      { label: 'Financial Planner', href: 'chop-planner.html' },
+    ],
+  };
+
+  const params = new URLSearchParams(window.location.search);
+  const tier = params.get('tier');
+  const sessionId = params.get('session_id');
+  const content = document.getElementById('content');
+
+  function renderError(message){
+    content.innerHTML = `
+      <div class="icon">⚠️</div>
+      <h1>Couldn't confirm payment</h1>
+      <p>${message}</p>
+      <a class="back-home" href="index.html">← Back to CHOP.</a>
+    `;
+  }
+
+  function renderSuccess(tier){
+    const tools = TIER_TOOLS[tier] || [];
+    const linksHtml = tools.map(t => `<a href="${t.href}">${t.label} →</a>`).join('');
+    content.innerHTML = `
+      <div class="icon">✅</div>
+      <h1>Chop! Stamp! Confirmed!</h1>
+      <p>Your payment went through — these tools are now unlocked on this device:</p>
+      <div class="links">${linksHtml}</div>
+      <a class="back-home" href="index.html">← Back to CHOP.</a>
+    `;
+  }
+
+  if(!tier || !sessionId){
+    renderError('This page is missing some information — if you just paid, try going back to the tool page and using it directly, it may already be unlocked.');
+  } else {
+    fetch('/.netlify/functions/verify-payment', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sessionId }),
+    })
+    .then(r => r.json())
+    .then(data => {
+      if(data.paid){
+        window.CHOP_UNLOCK.markTierUnlocked(tier);
+        renderSuccess(tier);
+      } else {
+        renderError('We could not confirm this payment as completed. If you were charged, please use the Feedback button to reach us and we\'ll sort it out.');
+      }
+    })
+    .catch(() => {
+      renderError('Something went wrong confirming your payment. If you were charged, please use the Feedback button to reach us.');
+    });
+  }
+</script>
+
+</body>
+</html>

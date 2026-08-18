@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CHOP. — HDB Affordability Calculator</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='44' fill='none' stroke='%23B4382A' stroke-width='7'/%3E%3Ctext x='50' y='64' font-size='44' text-anchor='middle' fill='%23B4382A' font-family='Georgia,serif' font-weight='700'%3EC%3C/text%3E%3C/svg%3E">
+<meta name="description" content="Free HDB and private property affordability calculator — check your MSR, TDSR, and LTV limits before you buy.">
+<meta property="og:title" content="HDB Affordability Calculator — CHOP.">
+<meta property="og:description" content="Free HDB and private property affordability calculator — check your MSR, TDSR, and LTV limits before you buy.">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=IBM+Plex+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#0F2B3D; --navy-2:#163A4F; --navy-3:#0A1F2C;
+    --paper:#F5EFE0; --paper-line:#D8CDB0; --paper-2:#EDE4CD;
+    --brass:#C79A3D; --brass-soft:#DDBB74;
+    --stamp:#B4382A; --stamp-dark:#8F2A1F;
+    --ink:#1C1B19; --ink-soft:#5B5648; --mint:#3F6B4C;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--navy);color:var(--paper);font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased;}
+  a{color:inherit;text-decoration:none;}
+
+  header{display:flex;align-items:center;justify-content:space-between;padding:26px 6vw;}
+  .logo{font-family:'Fraunces',serif;font-weight:700;font-size:24px;}
+  .logo span{color:var(--brass);}
+  .back{font-family:'IBM Plex Mono',monospace;font-size:13px;opacity:0.75;}
+  .back:hover{opacity:1;}
+
+  .section-wrap{max-width:920px;margin:0 auto;padding:2vh 6vw 8vh;}
+  .section-label{font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:0.14em;color:var(--brass-soft);text-transform:uppercase;text-align:center;margin-bottom:10px;}
+  h1.section-title{font-family:'Fraunces',serif;font-weight:600;font-size:clamp(28px,4vw,40px);text-align:center;margin:0 0 12px;}
+  p.section-sub{text-align:center;color:#C9C0A9;max-width:52ch;margin:0 auto 44px;font-size:15.5px;line-height:1.6;}
+  .rates-badge{display:inline-flex;align-items:center;gap:6px;font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:0.04em;color:var(--brass-soft);background:rgba(199,154,61,0.12);border:1px solid rgba(199,154,61,0.3);padding:6px 14px;border-radius:14px;margin:0 auto 32px;display:flex;width:fit-content;}
+
+  .passbook{background:var(--paper);color:var(--ink);border-radius:4px;box-shadow:0 40px 80px -30px rgba(0,0,0,0.6);overflow:hidden;}
+  .perforation{height:22px;background:repeating-linear-gradient(90deg, var(--navy) 0 7px, transparent 7px 16px);}
+  .passbook-inner{padding:38px 42px 42px;}
+  @media (max-width:640px){ .passbook-inner{padding:26px 20px 32px;} }
+
+  .pb-topline{display:flex;justify-content:space-between;align-items:baseline;font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--ink-soft);border-bottom:2px solid var(--ink);padding-bottom:14px;margin-bottom:22px;letter-spacing:0.04em;}
+  .pb-topline .book-title{font-family:'Fraunces',serif;font-weight:600;font-size:19px;color:var(--ink);letter-spacing:0;}
+
+  .field-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px 24px;margin-bottom:8px;}
+  @media (max-width:640px){ .field-grid{grid-template-columns:1fr;} }
+  .field{display:flex;align-items:center;justify-content:space-between;border-bottom:1px dashed var(--paper-line);padding:12px 0;gap:12px;}
+  .field label{font-size:13.5px;color:var(--ink-soft);}
+  .field .cur{font-family:'IBM Plex Mono',monospace;color:var(--ink-soft);margin-right:6px;font-size:13px;}
+  .field input, .field select{
+    border:none;background:transparent;font-family:'IBM Plex Mono',monospace;font-size:15px;font-weight:600;color:var(--ink);
+    outline:none;padding:2px 0;border-bottom:1px solid transparent;
+  }
+  .field input{width:120px;text-align:right;}
+  .field input:focus, .field select:focus{border-bottom:1px solid var(--stamp);}
+  .field select{width:150px;text-align:right;-webkit-appearance:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%235B5648'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right center;padding-right:16px;}
+
+  .status-line{font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--ink-soft);background:var(--paper-2);border-radius:3px;padding:12px 16px;margin:18px 0 6px;line-height:1.6;}
+  .status-line b{color:var(--ink);}
+
+  .ledger-rows{margin-top:20px;border-top:2px solid var(--ink);padding-top:6px;}
+  .ledger-row{display:flex;justify-content:space-between;align-items:baseline;padding:11px 0;border-bottom:1px dashed var(--paper-line);font-family:'IBM Plex Mono',monospace;font-size:14px;}
+  .ledger-row .desc{color:var(--ink-soft);}
+  .ledger-row .amt{font-weight:600;}
+  .ledger-row.total{border-bottom:none;border-top:2px solid var(--ink);margin-top:4px;padding-top:16px;font-size:16px;}
+  .ledger-row.total .amt{color:var(--mint);font-family:'Fraunces',serif;font-size:22px;font-weight:600;}
+  .ledger-row.warn .amt{color:var(--stamp-dark);}
+
+  .pb-hint{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--ink-soft);margin-top:16px;opacity:0.85;line-height:1.6;}
+
+  .compare-block{margin-top:26px;border-top:2px solid var(--ink);padding-top:18px;}
+  .compare-label{font-family:'IBM Plex Mono',monospace;font-size:11.5px;letter-spacing:0.08em;color:var(--stamp-dark);text-transform:uppercase;margin-bottom:12px;font-weight:700;}
+  .compare-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  @media (max-width:560px){ .compare-grid{grid-template-columns:1fr;} }
+  .compare-col{background:var(--paper-2);border-radius:3px;padding:16px 18px;}
+  .compare-col h4{font-family:'Fraunces',serif;font-size:15px;font-weight:600;margin:0 0 10px;color:var(--ink);}
+  .compare-row{display:flex;justify-content:space-between;font-family:'IBM Plex Mono',monospace;font-size:12.5px;padding:6px 0;border-bottom:1px dashed var(--paper-line);}
+  .compare-row:last-child{border-bottom:none;}
+  .compare-row .amt{font-weight:600;color:var(--ink);}
+  .compare-note{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--ink-soft);margin-top:14px;line-height:1.6;background:var(--paper-2);border-radius:3px;padding:12px 14px;}
+
+  .tabs-row{max-width:920px;margin:38px auto 0;display:flex;gap:10px;flex-wrap:wrap;justify-content:center;}
+  .tab-chip{font-family:'IBM Plex Mono',monospace;font-size:12.5px;padding:11px 18px;border-radius:20px;border:1px solid rgba(245,239,224,0.22);color:var(--paper);opacity:0.85;display:flex;align-items:center;gap:8px;}
+  .tab-chip.active{background:var(--brass);color:var(--navy-3);border-color:var(--brass);opacity:1;font-weight:600;}
+  .tab-chip .soon{font-size:9.5px;background:rgba(245,239,224,0.14);padding:2px 6px;border-radius:8px;}
+  .tab-chip .paid{font-size:9.5px;background:var(--brass);color:var(--navy-3);padding:2px 6px;border-radius:8px;font-weight:700;}
+
+  /* ---------- PREMIUM ---------- */
+  .premium-block{margin-top:44px;background:var(--navy-2);border-radius:4px;padding:2px;position:relative;overflow:hidden;}
+  .premium-inner{background:var(--paper);color:var(--ink);border-radius:3px;padding:34px 36px;position:relative;}
+  @media (max-width:640px){ .premium-inner{padding:26px 20px;} }
+  .premium-badge{display:inline-flex;align-items:center;gap:6px;font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:0.08em;background:var(--brass);color:var(--navy-3);padding:4px 10px;border-radius:12px;font-weight:700;margin-bottom:14px;}
+  .sgd-badge{display:inline-flex;align-items:center;gap:7px;font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:0.08em;background:var(--stamp);color:#FBF0E7;padding:5px 12px;border-radius:3px;font-weight:700;margin-bottom:12px;text-transform:uppercase;}
+  .sgd-badge .sgd-flag{font-size:11px;}
+  .premium-title{font-family:'Fraunces',serif;font-weight:600;font-size:22px;margin:0 0 8px;}
+  .premium-sub{font-size:14px;color:var(--ink-soft);line-height:1.6;margin:0 0 24px;max-width:56ch;}
+  .locked-fields{position:relative;}
+  .locked-fields .field-grid{filter:blur(3.5px);opacity:0.55;pointer-events:none;user-select:none;}
+  .locked-overlay{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:14px;padding:20px;}
+  .locked-overlay .lock-icon{font-size:22px;}
+  .locked-overlay p{font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--ink-soft);max-width:38ch;margin:0;}
+  .premium-cta{font-family:'IBM Plex Mono',monospace;font-size:13.5px;letter-spacing:0.03em;background:var(--stamp);color:#FBF0E7;border:none;padding:14px 26px;border-radius:2px;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:8px;transition:background .2s;}
+  .premium-cta:hover{background:var(--stamp-dark);}
+  .premium-price{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--ink-soft);margin-top:10px;}
+
+  footer{border-top:1px solid rgba(245,239,224,0.12);padding:34px 6vw;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:#9C927C;}
+
+  /* ---------- FEEDBACK ---------- */
+  .fb-btn{position:fixed;right:24px;bottom:24px;z-index:50;font-family:'IBM Plex Mono',monospace;font-size:12.5px;letter-spacing:0.04em;background:var(--stamp);color:#FBF0E7;border:none;padding:13px 20px;border-radius:24px;cursor:pointer;box-shadow:0 12px 30px -10px rgba(0,0,0,0.6);display:flex;align-items:center;gap:8px;transition:transform .15s, background .2s;}
+  .fb-btn:hover{background:var(--stamp-dark);transform:translateY(-2px);}
+  .fb-overlay{position:fixed;inset:0;background:rgba(10,31,44,0.72);z-index:60;display:none;align-items:center;justify-content:center;padding:20px;}
+  .fb-overlay.show{display:flex;}
+  .fb-card{background:var(--paper);color:var(--ink);border-radius:4px;max-width:420px;width:100%;box-shadow:0 40px 80px -20px rgba(0,0,0,0.6);overflow:hidden;}
+  .fb-card .perforation{height:16px;background:repeating-linear-gradient(90deg, var(--navy) 0 6px, transparent 6px 13px);}
+  .fb-card-inner{padding:26px 26px 24px;}
+  .fb-card-title{font-family:'Fraunces',serif;font-weight:600;font-size:19px;margin:0 0 6px;}
+  .fb-card-sub{font-size:13px;color:var(--ink-soft);margin:0 0 18px;line-height:1.5;}
+  .fb-field{margin-bottom:14px;}
+  .fb-field label{display:block;font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:0.06em;color:var(--ink-soft);text-transform:uppercase;margin-bottom:6px;}
+  .fb-field select, .fb-field textarea, .fb-field input{width:100%;border:1px solid var(--paper-line);background:var(--paper-2);border-radius:2px;font-family:'Inter',sans-serif;font-size:13.5px;color:var(--ink);padding:10px 12px;outline:none;box-sizing:border-box;}
+  .fb-field select{-webkit-appearance:none;appearance:none;font-family:'IBM Plex Mono',monospace;}
+  .fb-field textarea{resize:vertical;min-height:80px;font-family:'Inter',sans-serif;}
+  .fb-field select:focus, .fb-field textarea:focus, .fb-field input:focus{border-color:var(--stamp);}
+  .fb-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:6px;}
+  .fb-cancel{font-family:'IBM Plex Mono',monospace;font-size:12.5px;background:transparent;border:none;color:var(--ink-soft);cursor:pointer;padding:10px 14px;}
+  .fb-submit{font-family:'IBM Plex Mono',monospace;font-size:12.5px;background:var(--stamp);color:#FBF0E7;border:none;border-radius:2px;padding:11px 18px;cursor:pointer;}
+  .fb-submit:hover{background:var(--stamp-dark);}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">CHOP<span>.</span></div>
+  <a class="back" href="index.html">← Back home</a>
+</header>
+
+<div class="section-wrap">
+  <div class="section-label">Tool 04 — Free</div>
+  <h1 class="section-title">HDB Affordability Calculator</h1>
+  <p class="section-sub">See what you can realistically borrow for an HDB flat — checked against MSR, TDSR, and the loan-to-value cap, not just the sticker price.</p>
+  <div class="rates-badge">🗓 Figures current as of August 2026 — rates change most years, check before relying on this for a major decision</div>
+
+  <div class="passbook">
+    <div class="perforation"></div>
+    <div class="passbook-inner">
+      <div class="pb-topline">
+        <span class="book-title">HDB Ledger</span>
+        <span>MAS/HDB RULES: 2026</span>
+      </div>
+
+      <div class="field-grid">
+        <div class="field" style="grid-column:1 / -1;">
+          <label>Property type</label>
+          <select id="propertyType">
+            <option value="hdb">HDB Flat (MSR + TDSR apply)</option>
+            <option value="private">Private Property / EC after MOP (TDSR only)</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Flat/property price</label>
+          <div><span class="cur">SGD</span><input type="number" inputmode="decimal" id="price" placeholder="500000" /></div>
+        </div>
+        <div class="field">
+          <label>Gross monthly income (household)</label>
+          <div><span class="cur">SGD</span><input type="number" inputmode="decimal" id="income" placeholder="7000" /></div>
+        </div>
+        <div class="field">
+          <label>Existing monthly debt</label>
+          <div><span class="cur">SGD</span><input type="number" inputmode="decimal" id="debt" placeholder="0" /></div>
+        </div>
+        <div class="field">
+          <label>Age of oldest borrower</label>
+          <div><input type="number" inputmode="numeric" id="age" placeholder="30" style="width:80px;" /></div>
+        </div>
+        <div class="field" style="grid-column:1 / -1;">
+          <label>Loan type</label>
+          <select id="loanType">
+            <option value="hdb">HDB Loan (75% LTV, 25-yr max)</option>
+            <option value="bank">Bank Loan (75% LTV, 30/35-yr max)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="status-line" id="statusLine">Fill in the price, income, and age to see your borrowing limit.</div>
+
+      <div class="ledger-rows" id="ledgerRows" style="display:none;">
+        <div class="ledger-row"><span class="desc">Loan tenure used</span><span class="amt" id="tenureAmt">0 yrs</span></div>
+        <div class="ledger-row"><span class="desc">Max loan (LTV cap, 75%)</span><span class="amt" id="ltvAmt">$0</span></div>
+        <div class="ledger-row"><span class="desc" id="incomeCapLabel">Max loan (income-based)</span><span class="amt" id="incomeAmt">$0</span></div>
+        <div class="ledger-row"><span class="desc">Min cash/CPF downpayment</span><span class="amt" id="downAmt">$0</span></div>
+        <div class="ledger-row total"><span class="desc">Est. monthly instalment</span><span class="amt" id="monthlyAmt">$0</span></div>
+      </div>
+
+      <div class="pb-hint">
+        Uses MAS/HDB rules: LTV capped at 75% of flat price, MSR (HDB/EC mortgage) capped at 30% of gross income, TDSR (all debt) capped at 55% of gross income, and a 4% p.a. stress-test rate for affordability — even though actual HDB loan rates are lower (currently 2.6% p.a.), so your real instalment may end up smaller than shown here. Tenure capped at 25 years (HDB loan) or 30 years (bank loan), or 65 minus your age, whichever is shorter. Grants, resale levy, and CPF usage aren't factored in — check <a href="https://www.moneysense.gov.sg/buying-a-property-how-much-can-you-afford/" target="_blank" rel="noopener" style="color:var(--stamp-dark);text-decoration:underline;">MoneySense</a> and HDB directly before committing.
+      </div>
+
+      <div class="compare-block" id="loanCompareSection" style="display:none;">
+        <div class="sgd-badge"><span class="sgd-flag">🇸🇬</span>SGDecision</div>
+        <div class="compare-label">Free bonus — HDB Loan vs. Bank Loan, side by side</div>
+        <div class="compare-grid">
+          <div class="compare-col">
+            <h4>HDB Loan</h4>
+            <div class="compare-row"><span>Tenure</span><span class="amt" id="cmp-hdb-tenure">—</span></div>
+            <div class="compare-row"><span>Monthly instalment</span><span class="amt" id="cmp-hdb-monthly">$0</span></div>
+            <div class="compare-row"><span>Min downpayment</span><span class="amt" id="cmp-hdb-down">$0</span></div>
+          </div>
+          <div class="compare-col">
+            <h4>Bank Loan</h4>
+            <div class="compare-row"><span>Tenure</span><span class="amt" id="cmp-bank-tenure">—</span></div>
+            <div class="compare-row"><span>Monthly instalment</span><span class="amt" id="cmp-bank-monthly">$0</span></div>
+            <div class="compare-row"><span>Min downpayment</span><span class="amt" id="cmp-bank-down">$0</span></div>
+          </div>
+        </div>
+        <div class="compare-note" id="cmp-note"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="premium-block" data-tier="3">
+    <div class="premium-inner">
+      <span class="premium-badge">★ Premium</span>
+      <h2 class="premium-title">Depreciation &amp; Gains Analysis</h2>
+      <p class="premium-sub">For HDB flats: see how lease decay affects value over time. For private property: model appreciation against your holding period. Same underlying maths every time, not a rough guess based on what an agent tells you.</p>
+
+      <div class="locked-fields">
+        <div class="field-grid">
+          <div class="field"><label>Remaining lease (HDB only)</label><div><input type="number" disabled id="dep-lease" placeholder="95" style="width:80px;" /><span class="cur" style="margin-left:4px;">yrs</span></div></div>
+          <div class="field"><label>Expected holding period</label><div><input type="number" disabled id="dep-holding" placeholder="10" style="width:80px;" /><span class="cur" style="margin-left:4px;">yrs</span></div></div>
+          <div class="field"><label>Assumed annual growth rate</label><div><input type="number" disabled id="dep-growth" placeholder="2.5" style="width:80px;" /><span class="cur" style="margin-left:4px;">%</span></div></div>
+          <div class="field"><label>Renovation / upgrading spend</label><div><span class="cur">SGD</span><input type="number" disabled id="dep-reno" placeholder="30000" /></div></div>
+        </div>
+
+        <button class="cv-btn" id="dep-calc-btn" disabled style="margin-top:16px;">Project value at sale</button>
+
+        <div id="dep-results" style="display:none;margin-top:20px;border-top:2px solid var(--ink);padding-top:16px;">
+          <div class="ledger-row"><span class="desc">Remaining lease at sale</span><span class="amt" id="dep-lease-result">—</span></div>
+          <div class="ledger-row"><span class="desc">Projected sale value</span><span class="amt" id="dep-value-result">$0</span></div>
+          <div class="ledger-row"><span class="desc">Total invested (price + reno)</span><span class="amt" id="dep-invested-result">$0</span></div>
+          <div class="ledger-row total"><span class="desc">Projected gain / loss</span><span class="amt" id="dep-gain-result">$0</span></div>
+          <div class="pb-hint" style="margin-top:14px;" id="dep-note">Illustrative only — HDB lease decay accelerates below 60 years remaining and affects CPF usage/loan eligibility for buyers, which this model approximates with a simple discount, not the actual HDB valuation curve. Private property assumes no lease decay factor. Renovation spend is shown as cost, not assumed to be recovered in resale value.</div>
+        </div>
+
+        <div class="locked-overlay">
+          <div class="lock-icon">🔒</div>
+          <p>Unlock to see a projected value at sale, factoring in lease decay (HDB) or market appreciation (private), and whether your numbers beat inflation.</p>
+          <a class="premium-cta" href="#" id="premiumCta">Get Premium Access →</a>
+          <div class="premium-price">SGD 7.90, one-time</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="tabs-row">
+    <a class="tab-chip" href="chop-income.html" style="text-decoration:none;">Income &amp; Spend</a>
+    <a class="tab-chip" href="chop-cpf.html" style="text-decoration:none;">CPF Contribution</a>
+    <a class="tab-chip" href="chop-car-loan.html" style="text-decoration:none;">Car Loan</a>
+    <div class="tab-chip active">HDB Affordability</div>
+    <a class="tab-chip" href="chop-stamp-duty.html" style="text-decoration:none;">Stamp Duty</a>
+    <a class="tab-chip" href="chop-income-tax.html" style="text-decoration:none;">Income Tax</a>
+    <a class="tab-chip" href="chop-housing-grants.html" style="text-decoration:none;">Housing Grants</a>
+    <a class="tab-chip" href="chop-cv.html" style="text-decoration:none;">CV Tools</a>
+    <a class="tab-chip" href="chop-planner.html" style="text-decoration:none;">Financial Planner <span class="paid">paid</span></a>
+  </div>
+</div>
+
+<footer>A Singapore money toolkit — free tools, honest maths, no long story. · <a href="chop-terms.html" style="text-decoration:underline;">Terms & Disclaimer</a></footer>
+
+<script src="unlock.js"></script>
+<script>
+  function fmt(n){ return '$' + Math.round(n).toLocaleString('en-SG'); }
+
+  const priceEl = document.getElementById('price');
+  const incomeEl = document.getElementById('income');
+  const debtEl = document.getElementById('debt');
+  const ageEl = document.getElementById('age');
+  const loanTypeEl = document.getElementById('loanType');
+  const propertyTypeEl = document.getElementById('propertyType');
+
+  const statusLine = document.getElementById('statusLine');
+  const ledgerRows = document.getElementById('ledgerRows');
+  const tenureAmt = document.getElementById('tenureAmt');
+  const ltvAmt = document.getElementById('ltvAmt');
+  const incomeAmt = document.getElementById('incomeAmt');
+  const incomeCapLabel = document.getElementById('incomeCapLabel');
+  const downAmt = document.getElementById('downAmt');
+  const monthlyAmt = document.getElementById('monthlyAmt');
+
+  const STRESS_RATE = 0.04; // MAS medium-term interest rate floor
+  const LTV_CAP = 0.75;
+  const MSR_CAP = 0.30;
+  const TDSR_CAP = 0.55;
+
+  // Max loan an annuity of monthly instalment M can support over n months at monthly rate r
+  function loanFromInstalment(M, r, n){
+    if(M <= 0) return 0;
+    return M * (1 - Math.pow(1 + r, -n)) / r;
+  }
+  // Instalment required to repay loan L over n months at monthly rate r
+  function instalmentFromLoan(L, r, n){
+    return L * r / (1 - Math.pow(1 + r, -n));
+  }
+
+  function syncLoanTypeOptions(){
+    const isPrivate = propertyTypeEl.value === 'private';
+    const hdbOption = loanTypeEl.querySelector('option[value="hdb"]');
+    if(isPrivate){
+      hdbOption.disabled = true;
+      if(loanTypeEl.value === 'hdb') loanTypeEl.value = 'bank';
+    } else {
+      hdbOption.disabled = false;
+    }
+  }
+
+  // Reusable scenario calculator — used by both the single result and the side-by-side comparison
+  function computeScenario(price, income, debt, age, isHdbLoan, isPrivate){
+    const maxTenureType = isHdbLoan ? 25 : (isPrivate ? 35 : 30);
+    const tenureYears = Math.max(1, Math.min(maxTenureType, 65 - age));
+    const n = tenureYears * 12;
+    const r = STRESS_RATE / 12;
+
+    const msrInstalment = income * MSR_CAP;
+    const tdsrInstalment = Math.max(0, (income * TDSR_CAP) - debt);
+    const bindingInstalment = isPrivate ? tdsrInstalment : Math.min(msrInstalment, tdsrInstalment);
+    const bindingIsM = isPrivate
+      ? 'TDSR (55% of income, minus other debt)'
+      : (msrInstalment <= tdsrInstalment ? 'MSR (30% of income)' : 'TDSR (55% of income, minus other debt)');
+
+    const incomeBasedLoan = loanFromInstalment(bindingInstalment, r, n);
+    const ltvLoan = price * LTV_CAP;
+    const finalLoan = Math.min(incomeBasedLoan, ltvLoan);
+    const downpayment = price - finalLoan;
+    const monthly = instalmentFromLoan(finalLoan, r, n);
+
+    return { tenureYears, ltvLoan, incomeBasedLoan, finalLoan, downpayment, monthly, bindingIsM };
+  }
+
+  function calc(){
+    const price = parseFloat(priceEl.value);
+    const income = parseFloat(incomeEl.value);
+    const debt = parseFloat(debtEl.value) || 0;
+    const age = parseFloat(ageEl.value);
+    const isHdbLoan = loanTypeEl.value === 'hdb';
+    const isPrivate = propertyTypeEl.value === 'private';
+
+    const compareSection = document.getElementById('loanCompareSection');
+
+    if(!price || price <= 0 || !income || income <= 0 || !age || age <= 0){
+      statusLine.textContent = "Fill in the price, income, and age to see your borrowing limit.";
+      ledgerRows.style.display = 'none';
+      if(compareSection) compareSection.style.display = 'none';
+      return;
+    }
+
+    const r = computeScenario(price, income, debt, age, isHdbLoan, isPrivate);
+
+    tenureAmt.textContent = `${r.tenureYears} yrs`;
+    ltvAmt.textContent = fmt(r.ltvLoan);
+    incomeCapLabel.textContent = `Max loan (income-based, ${r.bindingIsM})`;
+    incomeAmt.textContent = fmt(r.incomeBasedLoan);
+    downAmt.textContent = fmt(r.downpayment);
+    monthlyAmt.textContent = fmt(r.monthly);
+
+    if(r.finalLoan >= price){
+      statusLine.innerHTML = `<b>This flat looks within reach.</b> Your income and the LTV cap both support a loan large enough to cover most of the price — check the downpayment figure below.`;
+    } else if(r.incomeBasedLoan < r.ltvLoan){
+      statusLine.innerHTML = `Your <b>income</b> is the binding constraint here (${r.bindingIsM}), not the loan-to-value cap. A smaller flat or higher income would raise your ceiling.`;
+    } else {
+      statusLine.innerHTML = `The <b>75% loan-to-value cap</b> is the binding constraint here — your income could support more, but the loan is capped at 75% of the flat price.`;
+    }
+
+    ledgerRows.style.display = 'block';
+
+    // Side-by-side comparison — only meaningful when both loan types are actually available (HDB flats)
+    if(compareSection){
+      if(isPrivate){
+        compareSection.style.display = 'none';
+      } else {
+        const hdbScenario = computeScenario(price, income, debt, age, true, false);
+        const bankScenario = computeScenario(price, income, debt, age, false, false);
+
+        document.getElementById('cmp-hdb-tenure').textContent = `${hdbScenario.tenureYears} yrs`;
+        document.getElementById('cmp-hdb-monthly').textContent = fmt(hdbScenario.monthly);
+        document.getElementById('cmp-hdb-down').textContent = fmt(hdbScenario.downpayment);
+
+        document.getElementById('cmp-bank-tenure').textContent = `${bankScenario.tenureYears} yrs`;
+        document.getElementById('cmp-bank-monthly').textContent = fmt(bankScenario.monthly);
+        document.getElementById('cmp-bank-down').textContent = fmt(bankScenario.downpayment);
+
+        const cheaper = hdbScenario.monthly <= bankScenario.monthly ? 'HDB Loan' : 'Bank Loan';
+        const diff = Math.abs(hdbScenario.monthly - bankScenario.monthly);
+        document.getElementById('cmp-note').innerHTML = diff < 5
+          ? `Both options land at roughly the same monthly instalment here — the real difference will come down to actual bank interest rates and HDB's fixed 2.6% rate at the time you apply.`
+          : `<b>${cheaper}</b> gives a lower estimated monthly instalment by about ${fmt(diff)}/month in this scenario — but HDB loans use a fixed rate (currently 2.6% p.a.) while bank rates float and can change over your loan term. Cheaper today doesn't always mean cheaper for the full tenure.`;
+
+        compareSection.style.display = 'block';
+      }
+    }
+  }
+
+  [priceEl, incomeEl, debtEl, ageEl].forEach(el => el.addEventListener('input', calc));
+  loanTypeEl.addEventListener('change', calc);
+  propertyTypeEl.addEventListener('change', () => { syncLoanTypeOptions(); calc(); });
+  syncLoanTypeOptions();
+
+  // TODO: replace with your real HitPay payment link once your account is approved
+  // ---------- Depreciation & Gains Analysis (Premium) ----------
+  function fmtDep(n){
+    const sign = n < 0 ? '−' : '';
+    return sign + '$' + Math.abs(Math.round(n)).toLocaleString('en-SG');
+  }
+
+  document.getElementById('dep-calc-btn').addEventListener('click', function(){
+    const currentPrice = parseFloat(document.getElementById('price').value) || 0;
+    const isPrivateProp = document.getElementById('propertyType').value === 'private';
+    const remainingLease = parseFloat(document.getElementById('dep-lease').value) || 0;
+    const holding = parseFloat(document.getElementById('dep-holding').value) || 0;
+    const growthPct = parseFloat(document.getElementById('dep-growth').value);
+    const growth = (isNaN(growthPct) ? 2.5 : growthPct) / 100;
+    const reno = parseFloat(document.getElementById('dep-reno').value) || 0;
+
+    const appreciated = currentPrice * Math.pow(1 + growth, holding);
+
+    let leaseAtSaleText = '—';
+    let projectedValue = appreciated;
+
+    if(!isPrivateProp){
+      const leaseAtSale = remainingLease - holding;
+      leaseAtSaleText = `${Math.max(0, Math.round(leaseAtSale))} yrs`;
+      // Simple illustrative decay factor: below 60 years remaining, resale value gets squeezed
+      // (loan/CPF-usage restrictions kick in below 60 years remaining lease)
+      let decayFactor = 1.0;
+      if(leaseAtSale < 60 && leaseAtSale >= 0){
+        decayFactor = 0.7 + 0.3 * (leaseAtSale / 60);
+      } else if(leaseAtSale < 0){
+        decayFactor = 0.4; // lease effectively expired/near-expired — floor estimate
+      }
+      projectedValue = appreciated * decayFactor;
+    }
+
+    const totalInvested = currentPrice + reno;
+    const gain = projectedValue - totalInvested;
+
+    document.getElementById('dep-lease-result').textContent = isPrivateProp ? 'N/A (private)' : leaseAtSaleText;
+    document.getElementById('dep-value-result').textContent = fmtDep(projectedValue);
+    document.getElementById('dep-invested-result').textContent = fmtDep(totalInvested);
+    document.getElementById('dep-gain-result').textContent = fmtDep(gain);
+
+    const inflationNote = growth >= 0.025
+      ? `Your assumed ${(growth*100).toFixed(1)}% growth rate is at or above typical long-run inflation (~2.5%).`
+      : `Your assumed ${(growth*100).toFixed(1)}% growth rate is below typical long-run inflation (~2.5%) — your real (inflation-adjusted) value may be lower than it looks.`;
+    document.getElementById('dep-note').textContent = `${inflationNote} ${!isPrivateProp ? "HDB lease decay is approximated with a simple discount below 60 years remaining, not the official HDB valuation model." : "Private property assumes no lease decay factor in this estimate."} Renovation spend is shown as cost, not assumed to be recovered in resale value.`;
+
+    document.getElementById('dep-results').style.display = 'block';
+  });
+
+
+  // TODO: replace TIER3_LINK with your real Stripe Payment Link for the $7.90 tier once created
+  const TIER3_LINK = "https://buy.stripe.com/4gMdRbajO6Lo2ojdOXb7y06";
+  document.getElementById('premiumCta').addEventListener('click', function(e){
+    e.preventDefault();
+    if(TIER3_LINK){
+      window.open(TIER3_LINK, '_blank', 'noopener');
+    } else {
+      alert('Premium access isn\'t set up yet — check back soon!');
+    }
+  });
+</script>
+
+<a class="fb-btn" href="chop-feedback.html" style="text-decoration:none;">✎ Feedback</a>
+<!-- Cloudflare Web Analytics -->
+<script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "4fcc4037ceb54a8795588df3465c7522"}'></script>
+</body>
+</html>

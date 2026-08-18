@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CHOP. — CPF Contribution Calculator</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='44' fill='none' stroke='%23B4382A' stroke-width='7'/%3E%3Ctext x='50' y='64' font-size='44' text-anchor='middle' fill='%23B4382A' font-family='Georgia,serif' font-weight='700'%3EC%3C/text%3E%3C/svg%3E">
+<meta name="description" content="Free CPF contribution calculator using official 2026 CPF Board rates — see your OA, SA, and MediSave breakdown by age.">
+<meta property="og:title" content="CPF Contribution Calculator — CHOP.">
+<meta property="og:description" content="Free CPF contribution calculator using official 2026 CPF Board rates — see your OA, SA, and MediSave breakdown by age.">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=IBM+Plex+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#0F2B3D; --navy-2:#163A4F; --navy-3:#0A1F2C;
+    --paper:#F5EFE0; --paper-line:#D8CDB0; --paper-2:#EDE4CD;
+    --brass:#C79A3D; --brass-soft:#DDBB74;
+    --stamp:#B4382A; --stamp-dark:#8F2A1F;
+    --ink:#1C1B19; --ink-soft:#5B5648; --mint:#3F6B4C;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--navy);color:var(--paper);font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased;}
+  a{color:inherit;text-decoration:none;}
+
+  header{display:flex;align-items:center;justify-content:space-between;padding:26px 6vw;}
+  .logo{font-family:'Fraunces',serif;font-weight:700;font-size:24px;}
+  .logo span{color:var(--brass);}
+  .back{font-family:'IBM Plex Mono',monospace;font-size:13px;opacity:0.75;}
+  .back:hover{opacity:1;}
+
+  .section-wrap{max-width:920px;margin:0 auto;padding:2vh 6vw 8vh;}
+  .section-label{font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:0.14em;color:var(--brass-soft);text-transform:uppercase;text-align:center;margin-bottom:10px;}
+  h1.section-title{font-family:'Fraunces',serif;font-weight:600;font-size:clamp(28px,4vw,40px);text-align:center;margin:0 0 12px;}
+  p.section-sub{text-align:center;color:#C9C0A9;max-width:52ch;margin:0 auto 44px;font-size:15.5px;line-height:1.6;}
+  .rates-badge{display:inline-flex;align-items:center;gap:6px;font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:0.04em;color:var(--brass-soft);background:rgba(199,154,61,0.12);border:1px solid rgba(199,154,61,0.3);padding:6px 14px;border-radius:14px;margin:0 auto 32px;display:flex;width:fit-content;}
+
+  .passbook{background:var(--paper);color:var(--ink);border-radius:4px;box-shadow:0 40px 80px -30px rgba(0,0,0,0.6);overflow:hidden;}
+  .perforation{height:22px;background:repeating-linear-gradient(90deg, var(--navy) 0 7px, transparent 7px 16px);}
+  .passbook-inner{padding:38px 42px 42px;}
+  @media (max-width:640px){ .passbook-inner{padding:26px 20px 32px;} }
+
+  .pb-topline{display:flex;justify-content:space-between;align-items:baseline;font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--ink-soft);border-bottom:2px solid var(--ink);padding-bottom:14px;margin-bottom:22px;letter-spacing:0.04em;}
+  .pb-topline .book-title{font-family:'Fraunces',serif;font-weight:600;font-size:19px;color:var(--ink);letter-spacing:0;}
+
+  .field-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px 24px;margin-bottom:8px;}
+  @media (max-width:640px){ .field-grid{grid-template-columns:1fr;} }
+  .field{display:flex;align-items:center;justify-content:space-between;border-bottom:1px dashed var(--paper-line);padding:12px 0;gap:12px;}
+  .field label{font-size:13.5px;color:var(--ink-soft);}
+  .field .cur{font-family:'IBM Plex Mono',monospace;color:var(--ink-soft);margin-right:6px;font-size:13px;}
+  .field input, .field select{
+    border:none;background:transparent;font-family:'IBM Plex Mono',monospace;font-size:15px;font-weight:600;color:var(--ink);
+    outline:none;padding:2px 0;border-bottom:1px solid transparent;
+  }
+  .field input{width:120px;text-align:right;}
+  .field input:focus, .field select:focus{border-bottom:1px solid var(--stamp);}
+  .field select{width:180px;text-align:right;-webkit-appearance:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%235B5648'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right center;padding-right:16px;}
+
+  .status-line{
+    font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--ink-soft);
+    background:var(--paper-2);border-radius:3px;padding:12px 16px;margin:18px 0 6px;
+  }
+  .status-line b{color:var(--ink);}
+
+  .ledger-rows{margin-top:20px;border-top:2px solid var(--ink);padding-top:6px;}
+  .ledger-row{display:flex;justify-content:space-between;align-items:baseline;padding:11px 0;border-bottom:1px dashed var(--paper-line);font-family:'IBM Plex Mono',monospace;font-size:14px;}
+  .ledger-row .desc{color:var(--ink-soft);}
+  .ledger-row .amt{font-weight:600;}
+  .ledger-row.total{border-bottom:none;border-top:2px solid var(--ink);margin-top:4px;padding-top:16px;font-size:16px;}
+  .ledger-row.total .amt{color:var(--mint);font-family:'Fraunces',serif;font-size:22px;font-weight:600;}
+
+  .pb-hint{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--ink-soft);margin-top:16px;opacity:0.85;line-height:1.6;}
+  .pb-hint a{color:var(--stamp-dark);text-decoration:underline;}
+
+  .tabs-row{max-width:920px;margin:38px auto 0;display:flex;gap:10px;flex-wrap:wrap;justify-content:center;}
+  .tab-chip{font-family:'IBM Plex Mono',monospace;font-size:12.5px;padding:11px 18px;border-radius:20px;border:1px solid rgba(245,239,224,0.22);color:var(--paper);opacity:0.85;display:flex;align-items:center;gap:8px;}
+  .tab-chip.active{background:var(--brass);color:var(--navy-3);border-color:var(--brass);opacity:1;font-weight:600;}
+  .tab-chip .soon{font-size:9.5px;background:rgba(245,239,224,0.14);padding:2px 6px;border-radius:8px;}
+  .tab-chip .paid{font-size:9.5px;background:var(--brass);color:var(--navy-3);padding:2px 6px;border-radius:8px;font-weight:700;}
+
+  footer{border-top:1px solid rgba(245,239,224,0.12);padding:34px 6vw;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:#9C927C;}
+
+  /* ---------- FEEDBACK ---------- */
+  .fb-btn{
+    position:fixed;right:24px;bottom:24px;z-index:50;
+    font-family:'IBM Plex Mono',monospace;font-size:12.5px;letter-spacing:0.04em;
+    background:var(--stamp);color:#FBF0E7;border:none;padding:13px 20px;border-radius:24px;
+    cursor:pointer;box-shadow:0 12px 30px -10px rgba(0,0,0,0.6);
+    display:flex;align-items:center;gap:8px;transition:transform .15s, background .2s;
+  }
+  .fb-btn:hover{background:var(--stamp-dark);transform:translateY(-2px);}
+  .fb-overlay{position:fixed;inset:0;background:rgba(10,31,44,0.72);z-index:60;display:none;align-items:center;justify-content:center;padding:20px;}
+  .fb-overlay.show{display:flex;}
+  .fb-card{background:var(--paper);color:var(--ink);border-radius:4px;max-width:420px;width:100%;box-shadow:0 40px 80px -20px rgba(0,0,0,0.6);overflow:hidden;}
+  .fb-card .perforation{height:16px;background:repeating-linear-gradient(90deg, var(--navy) 0 6px, transparent 6px 13px);}
+  .fb-card-inner{padding:26px 26px 24px;}
+  .fb-card-title{font-family:'Fraunces',serif;font-weight:600;font-size:19px;margin:0 0 6px;}
+  .fb-card-sub{font-size:13px;color:var(--ink-soft);margin:0 0 18px;line-height:1.5;}
+  .fb-field{margin-bottom:14px;}
+  .fb-field label{display:block;font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:0.06em;color:var(--ink-soft);text-transform:uppercase;margin-bottom:6px;}
+  .fb-field select, .fb-field textarea, .fb-field input{width:100%;border:1px solid var(--paper-line);background:var(--paper-2);border-radius:2px;font-family:'Inter',sans-serif;font-size:13.5px;color:var(--ink);padding:10px 12px;outline:none;box-sizing:border-box;}
+  .fb-field select{-webkit-appearance:none;appearance:none;font-family:'IBM Plex Mono',monospace;}
+  .fb-field textarea{resize:vertical;min-height:80px;font-family:'Inter',sans-serif;}
+  .fb-field select:focus, .fb-field textarea:focus, .fb-field input:focus{border-color:var(--stamp);}
+  .fb-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:6px;}
+  .fb-cancel{font-family:'IBM Plex Mono',monospace;font-size:12.5px;background:transparent;border:none;color:var(--ink-soft);cursor:pointer;padding:10px 14px;}
+  .fb-submit{font-family:'IBM Plex Mono',monospace;font-size:12.5px;background:var(--stamp);color:#FBF0E7;border:none;border-radius:2px;padding:11px 18px;cursor:pointer;}
+  .fb-submit:hover{background:var(--stamp-dark);}
+  /* ---------- PREMIUM ---------- */
+  .premium-block{
+    margin-top:44px;background:var(--navy-2);border-radius:4px;padding:2px;
+    position:relative;overflow:hidden;
+  }
+  .premium-inner{background:var(--paper);color:var(--ink);border-radius:3px;padding:34px 36px;position:relative;}
+  @media (max-width:640px){ .premium-inner{padding:26px 20px;} }
+  .premium-badge{
+    display:inline-flex;align-items:center;gap:6px;font-family:'IBM Plex Mono',monospace;font-size:11px;
+    letter-spacing:0.08em;background:var(--brass);color:var(--navy-3);padding:4px 10px;border-radius:12px;
+    font-weight:700;margin-bottom:14px;
+  }
+  .sgd-badge{display:inline-flex;align-items:center;gap:7px;font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:0.08em;background:var(--stamp);color:#FBF0E7;padding:5px 12px;border-radius:3px;font-weight:700;margin-bottom:12px;text-transform:uppercase;}
+  .sgd-badge .sgd-flag{font-size:11px;}
+  .premium-title{font-family:'Fraunces',serif;font-weight:600;font-size:22px;margin:0 0 8px;}
+  .premium-sub{font-size:14px;color:var(--ink-soft);line-height:1.6;margin:0 0 24px;max-width:56ch;}
+
+  .locked-fields{position:relative;}
+  .locked-fields .field-grid{filter:blur(3.5px);opacity:0.55;pointer-events:none;user-select:none;}
+  .locked-overlay{
+    position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    text-align:center;gap:14px;padding:20px;
+  }
+  .locked-overlay .lock-icon{font-size:22px;}
+  .locked-overlay p{font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--ink-soft);max-width:38ch;margin:0;}
+  .premium-cta{
+    font-family:'IBM Plex Mono',monospace;font-size:13.5px;letter-spacing:0.03em;
+    background:var(--stamp);color:#FBF0E7;border:none;padding:14px 26px;border-radius:2px;
+    cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:8px;transition:background .2s;
+  }
+  .premium-cta:hover{background:var(--stamp-dark);}
+  .premium-price{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--ink-soft);margin-top:10px;}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">CHOP<span>.</span></div>
+  <a class="back" href="index.html">← Back home</a>
+</header>
+
+<div class="section-wrap">
+  <div class="section-label">Tool 02 — Free</div>
+  <h1 class="section-title">CPF Contribution Calculator</h1>
+  <p class="section-sub">See exactly how much goes into CPF each month — your share, your employer's share, and the total. Based on official CPF Board rates effective 1 January 2026.</p>
+  <div class="rates-badge">🗓 Figures current as of August 2026 — rates change most years, check before relying on this for a major decision</div>
+
+  <div class="passbook">
+    <div class="perforation"></div>
+    <div class="passbook-inner">
+      <div class="pb-topline">
+        <span class="book-title">CPF Ledger</span>
+        <span>RATE TABLE: 2026</span>
+      </div>
+
+      <div class="field-grid">
+        <div class="field">
+          <label>Monthly wage</label>
+          <div><span class="cur">SGD</span><input type="number" inputmode="decimal" id="wage" placeholder="4200" /></div>
+        </div>
+        <div class="field">
+          <label>Your age</label>
+          <div><input type="number" inputmode="numeric" id="age" placeholder="28" style="width:80px;" /></div>
+        </div>
+        <div class="field" style="grid-column:1 / -1;">
+          <label>Citizenship</label>
+          <select id="status">
+            <option value="citizen">Citizen / SPR (3rd year+)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="status-line" id="statusLine">Enter your wage and age to see your CPF breakdown.</div>
+
+      <div class="ledger-rows" id="ledgerRows" style="display:none;">
+        <div class="ledger-row"><span class="desc" id="employeeLabel">Your contribution (employee)</span><span class="amt" id="employeeAmt">$0</span></div>
+        <div class="ledger-row"><span class="desc" id="employerLabel">Employer's contribution</span><span class="amt" id="employerAmt">$0</span></div>
+        <div class="ledger-row total"><span class="desc">Total monthly CPF</span><span class="amt" id="totalAmt">$0</span></div>
+      </div>
+
+      <div class="pb-hint">
+        Rates shown are for Singapore Citizens and SPRs (3rd year onward) earning above $750/month, capped at the $8,000 Ordinary Wage ceiling. First/second-year SPRs and wages $50–$750 follow graduated rates not shown here — check <a href="https://www.cpf.gov.sg/employer/employer-obligations/how-much-cpf-contributions-to-pay" target="_blank" rel="noopener">cpf.gov.sg</a> for your exact case.
+      </div>
+    </div>
+  </div>
+
+  <div class="premium-block" data-tier="2">
+    <div class="premium-inner">
+      <span class="premium-badge">★ Premium</span>
+      <h2 class="premium-title">CPF Retirement Projector</h2>
+      <p class="premium-sub">Enter your CPF account balances once and get a projected CPF LIFE payout at 65 — built on CPF Board's actual published 2026 payout figures, not a guess, done in one click instead of hunting through multiple calculators.</p>
+
+      <div class="locked-fields">
+        <div class="field-grid">
+          <div class="field"><label>Ordinary Account (OA)</label><div><span class="cur">SGD</span><input type="number" disabled id="proj-oa" placeholder="45000" /></div></div>
+          <div class="field"><label>Special Account (SA)</label><div><span class="cur">SGD</span><input type="number" disabled id="proj-sa" placeholder="30000" /></div></div>
+          <div class="field"><label>Medisave Account (MA)</label><div><span class="cur">SGD</span><input type="number" disabled id="proj-ma" placeholder="20000" /></div></div>
+          <div class="field"><label>Retirement Account (RA, if 55+)</label><div><span class="cur">SGD</span><input type="number" disabled id="proj-ra" placeholder="0" /></div></div>
+          <div class="field"><label>Years to retirement (65)</label><div><input type="number" disabled id="proj-years" placeholder="20" style="width:80px;" /></div></div>
+          <div class="field"><label>Target CPF LIFE plan</label><div>
+            <select disabled id="proj-plan" style="width:130px;text-align:right;font-family:'IBM Plex Mono',monospace;font-weight:600;border:none;background:transparent;">
+              <option value="standard">Standard</option>
+              <option value="basic">Basic</option>
+              <option value="escalating">Escalating</option>
+            </select>
+          </div></div>
+        </div>
+
+        <button class="cv-btn" id="proj-calc-btn" disabled style="margin-top:16px;">Project my payout</button>
+
+        <div id="proj-results" style="display:none;margin-top:20px;border-top:2px solid var(--ink);padding-top:16px;">
+          <div class="ledger-row"><span class="desc">Projected RA balance at 65</span><span class="amt" id="proj-ra-result">$0</span></div>
+          <div class="ledger-row"><span class="desc" id="proj-plan-label">Est. monthly CPF LIFE payout (Standard)</span><span class="amt" id="proj-payout-result">$0</span></div>
+          <div class="pb-hint" style="margin-top:14px;">
+            Estimate only — built from CPF Board's published 2026 reference payouts (BRS $110,200 → ~$950/mo, FRS $220,400 → ~$1,780/mo, ERS $440,800 → ~$3,440/mo, Standard Plan) and a 4% assumed annual growth rate on your OA+SA until 65. Doesn't include future monthly contributions from work — pair this with the free CPF Contribution Calculator for that. For a personalised figure, use CPF Board's official Retirement Payout Planner via Singpass.
+          </div>
+        </div>
+
+        <div class="locked-overlay">
+          <div class="lock-icon">🔒</div>
+          <p>Unlock to enter your real balances and get your projected monthly CPF LIFE payout, with a breakdown of how much comes from today's savings vs. future contributions.</p>
+          <a class="premium-cta" href="#" id="premiumCta">Get Premium Access →</a>
+          <div class="premium-price">SGD 5.90, one-time</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="premium-block" data-tier="2">
+    <div class="premium-inner">
+      <span class="premium-badge">★ Premium</span>
+      <div class="sgd-badge"><span class="sgd-flag">🇸🇬</span>SGDecision</div>
+      <h2 class="premium-title">Top Up CPF, or Invest?</h2>
+      <p class="premium-sub">Put a sum toward your CPF Retirement Account and compare it against investing the same amount — both projected to the same year, so you can see which actually gives you more.</p>
+
+      <div class="locked-fields">
+        <div class="field-grid">
+          <div class="field"><label>Amount to top up / invest</label><div><span class="cur">SGD</span><input type="number" disabled id="cmp-topup" placeholder="20000" /></div></div>
+          <div class="field"><label>Years to retirement (65)</label><div><input type="number" disabled id="cmp-years" placeholder="20" style="width:80px;" /></div></div>
+          <div class="field"><label>Assumed investment return</label><div><input type="number" disabled id="cmp-invest-rate" placeholder="6" style="width:70px;" /><span class="cur" style="margin-left:4px;">% p.a.</span></div></div>
+        </div>
+
+        <button class="cv-btn" id="cmp-calc-btn" disabled style="margin-top:16px;">Compare the two paths</button>
+
+        <div id="cmp-results" style="display:none;margin-top:20px;border-top:2px solid var(--ink);padding-top:16px;">
+          <div class="compare-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+            <div class="compare-col" style="background:var(--paper-2);border-radius:3px;padding:16px 18px;">
+              <h4 style="font-family:'Fraunces',serif;font-size:15px;font-weight:600;margin:0 0 10px;color:var(--ink);">Top up CPF</h4>
+              <div class="ledger-row"><span class="desc">Added monthly CPF LIFE payout</span><span class="amt" id="cmp-cpf-payout">$0/mo</span></div>
+              <div class="ledger-row"><span class="desc">Guaranteed?</span><span class="amt">Yes, for life</span></div>
+            </div>
+            <div class="compare-col" style="background:var(--paper-2);border-radius:3px;padding:16px 18px;">
+              <h4 style="font-family:'Fraunces',serif;font-size:15px;font-weight:600;margin:0 0 10px;color:var(--ink);">Invest instead</h4>
+              <div class="ledger-row"><span class="desc">Projected lump sum</span><span class="amt" id="cmp-invest-lump">$0</span></div>
+              <div class="ledger-row"><span class="desc">Equiv. monthly (4% drawdown)</span><span class="amt" id="cmp-invest-monthly">$0/mo</span></div>
+            </div>
+          </div>
+          <div class="pb-hint" style="margin-top:14px;" id="cmp-note"></div>
+        </div>
+
+        <div class="locked-overlay">
+          <div class="lock-icon">🔒</div>
+          <p>Unlock to compare a CPF top-up against investing the same amount — both projected to your retirement year, side by side.</p>
+          <a class="premium-cta" href="#" id="premiumCta3">Get Premium Access →</a>
+          <div class="premium-price">SGD 5.90, one-time</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="premium-block" data-tier="2">
+    <div class="premium-inner">
+      <span class="premium-badge">★ Premium</span>
+      <div class="sgd-badge"><span class="sgd-flag">🇸🇬</span>SGDecision</div>
+      <h2 class="premium-title">Retire at 60, or 65?</h2>
+      <p class="premium-sub">CPF LIFE payouts don't start until 65 at the earliest. Stopping work at 60 means bridging 5 years of expenses yourself — and missing out on 5 more years of CPF growth. See both effects together.</p>
+
+      <div class="locked-fields">
+        <div class="field-grid">
+          <div class="field"><label>Current age</label><div><input type="number" disabled id="r60-age" placeholder="45" style="width:80px;" /></div></div>
+          <div class="field"><label>Current OA + SA total</label><div><span class="cur">SGD</span><input type="number" disabled id="r60-oasa" placeholder="150000" /></div></div>
+          <div class="field"><label>Current monthly salary</label><div><span class="cur">SGD</span><input type="number" disabled id="r60-salary" placeholder="6000" /></div></div>
+          <div class="field"><label>Monthly expenses needed in retirement</label><div><span class="cur">SGD</span><input type="number" disabled id="r60-expenses" placeholder="2500" /></div></div>
+          <div class="field" style="grid-column:1 / -1;"><label>Non-CPF savings/investments available for bridging</label><div><span class="cur">SGD</span><input type="number" disabled id="r60-bridge-savings" placeholder="80000" /></div></div>
+        </div>
+
+        <button class="cv-btn" id="r60-calc-btn" disabled style="margin-top:16px;">Compare retiring at 60 vs 65</button>
+
+        <div id="r60-results" style="display:none;margin-top:20px;border-top:2px solid var(--ink);padding-top:16px;">
+          <div class="ledger-row"><span class="desc">Bridge fund needed (age 60–65, 5 yrs)</span><span class="amt" id="r60-bridge-needed">$0</span></div>
+          <div class="ledger-row"><span class="desc" id="r60-bridge-status-label">Bridge shortfall vs. your savings</span><span class="amt" id="r60-bridge-status">$0</span></div>
+          <div class="ledger-row"><span class="desc">CPF LIFE payout if retire at 65</span><span class="amt" id="r60-payout-65">$0/mo</span></div>
+          <div class="ledger-row total"><span class="desc">CPF LIFE payout if retire at 60</span><span class="amt" id="r60-payout-60">$0/mo</span></div>
+          <div class="pb-hint" style="margin-top:14px;" id="r60-note"></div>
+        </div>
+
+        <div class="locked-overlay">
+          <div class="lock-icon">🔒</div>
+          <p>Unlock to see your bridging fund requirement and the CPF LIFE payout difference between stopping work at 60 vs. 65.</p>
+          <a class="premium-cta" href="#" id="premiumCta4">Get Premium Access →</a>
+          <div class="premium-price">SGD 5.90, one-time</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <div class="tabs-row">
+    <a class="tab-chip" href="chop-income.html" style="text-decoration:none;">Income &amp; Spend</a>
+    <div class="tab-chip active">CPF Contribution</div>
+    <a class="tab-chip" href="chop-car-loan.html" style="text-decoration:none;">Car Loan</a>
+    <a class="tab-chip" href="chop-hdb.html" style="text-decoration:none;">HDB Affordability</a>
+    <a class="tab-chip" href="chop-stamp-duty.html" style="text-decoration:none;">Stamp Duty</a>
+    <a class="tab-chip" href="chop-income-tax.html" style="text-decoration:none;">Income Tax</a>
+    <a class="tab-chip" href="chop-housing-grants.html" style="text-decoration:none;">Housing Grants</a>
+    <a class="tab-chip" href="chop-cv.html" style="text-decoration:none;">CV Tools</a>
+    <a class="tab-chip" href="chop-planner.html" style="text-decoration:none;">Financial Planner <span class="paid">paid</span></a>
+  </div>
+</div>
+
+<footer>A Singapore money toolkit — free tools, honest maths, no long story. · <a href="chop-terms.html" style="text-decoration:underline;">Terms & Disclaimer</a></footer>
+
+<script src="unlock.js"></script>
+<script>
+  // Official CPF contribution rates from 1 Jan 2026 (Table 1: Citizens/SPR 3rd yr+, wages > $750)
+  const RATE_TABLE = [
+    { min: 0,  max: 55, employer: 0.17,  employee: 0.20,  label: "55 and below" },
+    { min: 55, max: 60, employer: 0.16,  employee: 0.18,  label: "above 55 to 60" },
+    { min: 60, max: 65, employer: 0.125, employee: 0.125, label: "above 60 to 65" },
+    { min: 65, max: 70, employer: 0.09,  employee: 0.075, label: "above 65 to 70" },
+    { min: 70, max: 999,employer: 0.075, employee: 0.05,  label: "above 70" },
+  ];
+  const OW_CEILING = 8000;
+
+  const wageEl = document.getElementById('wage');
+  const ageEl = document.getElementById('age');
+  const statusLine = document.getElementById('statusLine');
+  const ledgerRows = document.getElementById('ledgerRows');
+  const employeeAmt = document.getElementById('employeeAmt');
+  const employerAmt = document.getElementById('employerAmt');
+  const totalAmt = document.getElementById('totalAmt');
+  const employeeLabel = document.getElementById('employeeLabel');
+  const employerLabel = document.getElementById('employerLabel');
+
+  function bracketFor(age){
+    for(const b of RATE_TABLE){
+      if(age > b.min && age <= b.max) return b;
+      if(age <= 55 && b.min === 0) return b; // covers age <=55 including very young
+    }
+    return RATE_TABLE[RATE_TABLE.length - 1];
+  }
+
+  function fmt(n){ return '$' + Math.round(n).toLocaleString('en-SG'); }
+
+  function calc(){
+    const wage = parseFloat(wageEl.value);
+    const age = parseFloat(ageEl.value);
+
+    if(!wage || !age || wage <= 0 || age <= 0){
+      statusLine.textContent = "Enter your wage and age to see your CPF breakdown.";
+      ledgerRows.style.display = 'none';
+      return;
+    }
+
+    if(wage <= 750){
+      statusLine.innerHTML = "<b>Wages of $750 or below</b> follow graduated CPF rates that aren't covered by this simple calculator — check cpf.gov.sg for the exact figures.";
+      ledgerRows.style.display = 'none';
+      return;
+    }
+
+    const bracket = bracketFor(age);
+    const cappedWage = Math.min(wage, OW_CEILING);
+    const employeeShare = cappedWage * bracket.employee;
+    const employerShare = cappedWage * bracket.employer;
+    const total = employeeShare + employerShare;
+
+    let note = `At age ${age} (${bracket.label}), your combined CPF rate is ${Math.round((bracket.employer + bracket.employee) * 1000) / 10}% of wages.`;
+    if(wage > OW_CEILING){
+      note += ` Contributions are capped at the $${OW_CEILING.toLocaleString('en-SG')} Ordinary Wage ceiling — CPF isn't charged on the portion above that.`;
+    }
+    statusLine.innerHTML = note;
+
+    employeeLabel.textContent = `Your contribution (employee, ${Math.round(bracket.employee*1000)/10}%)`;
+    employerLabel.textContent = `Employer's contribution (${Math.round(bracket.employer*1000)/10}%)`;
+    employeeAmt.textContent = fmt(employeeShare);
+    employerAmt.textContent = fmt(employerShare);
+    totalAmt.textContent = fmt(total);
+    ledgerRows.style.display = 'block';
+  }
+
+  wageEl.addEventListener('input', calc);
+  ageEl.addEventListener('input', calc);
+
+  // ---------- CPF Retirement Projector (Premium) ----------
+  // Anchor points: CPF Board's published 2026-cohort Standard Plan payout estimates
+  const CPF_LIFE_ANCHORS = [
+    { ra: 0,       payout: 0 },
+    { ra: 110200,  payout: 950 },   // BRS
+    { ra: 220400,  payout: 1780 },  // FRS
+    { ra: 440800,  payout: 3440 },  // ERS
+  ];
+  const PLAN_MULTIPLIER = { standard: 1.0, basic: 0.93, escalating: 0.82 };
+  const ERS_CAP = 440800;
+  const GROWTH_RATE = 0.04;
+
+  function interpolatePayout(ra){
+    const capped = Math.min(ra, ERS_CAP);
+    for(let i = 0; i < CPF_LIFE_ANCHORS.length - 1; i++){
+      const a = CPF_LIFE_ANCHORS[i], b = CPF_LIFE_ANCHORS[i+1];
+      if(capped >= a.ra && capped <= b.ra){
+        const t = (capped - a.ra) / (b.ra - a.ra);
+        return a.payout + t * (b.payout - a.payout);
+      }
+    }
+    return CPF_LIFE_ANCHORS[CPF_LIFE_ANCHORS.length - 1].payout;
+  }
+
+  function fmtProj(n){ return '$' + Math.round(n).toLocaleString('en-SG'); }
+
+  document.getElementById('proj-calc-btn').addEventListener('click', function(){
+    const oa = parseFloat(document.getElementById('proj-oa').value) || 0;
+    const sa = parseFloat(document.getElementById('proj-sa').value) || 0;
+    const ra = parseFloat(document.getElementById('proj-ra').value) || 0;
+    const years = parseFloat(document.getElementById('proj-years').value) || 0;
+    const plan = document.getElementById('proj-plan').value;
+
+    const currentTotal = oa + sa + ra;
+    const projectedRA = Math.min(currentTotal * Math.pow(1 + GROWTH_RATE, years), ERS_CAP);
+    const basePayout = interpolatePayout(projectedRA);
+    const finalPayout = basePayout * (PLAN_MULTIPLIER[plan] || 1.0);
+
+    document.getElementById('proj-ra-result').textContent = fmtProj(projectedRA);
+    document.getElementById('proj-payout-result').textContent = fmtProj(finalPayout) + '/mo';
+    document.getElementById('proj-plan-label').textContent = `Est. monthly CPF LIFE payout (${plan.charAt(0).toUpperCase() + plan.slice(1)})`;
+    document.getElementById('proj-results').style.display = 'block';
+  });
+
+  // ---------- Top Up CPF vs Invest (Premium) ----------
+  document.getElementById('cmp-calc-btn').addEventListener('click', function(){
+    const topup = parseFloat(document.getElementById('cmp-topup').value) || 0;
+    const years = parseFloat(document.getElementById('cmp-years').value) || 0;
+    const investRatePct = parseFloat(document.getElementById('cmp-invest-rate').value);
+    const investRate = (isNaN(investRatePct) ? 6 : investRatePct) / 100;
+
+    // CPF path: grow the top-up alone at CPF's 4% rate, use it as a marginal payout estimate
+    const cpfFV = Math.min(topup * Math.pow(1 + GROWTH_RATE, years), ERS_CAP);
+    const cpfMonthlyPayout = interpolatePayout(cpfFV);
+
+    // Investment path: grow at assumed return, convert lump sum to monthly via a 4% safe withdrawal rate
+    const investFV = topup * Math.pow(1 + investRate, years);
+    const investMonthly = (investFV * 0.04) / 12;
+
+    document.getElementById('cmp-cpf-payout').textContent = fmtProj(cpfMonthlyPayout) + '/mo';
+    document.getElementById('cmp-invest-lump').textContent = fmtProj(investFV);
+    document.getElementById('cmp-invest-monthly').textContent = fmtProj(investMonthly) + '/mo';
+
+    const higherMonthly = investMonthly > cpfMonthlyPayout ? 'Investing' : 'The CPF top-up';
+    document.getElementById('cmp-note').innerHTML =
+      `On a pure monthly-income basis at this return rate, <b>${higherMonthly}</b> comes out ahead. But these aren't the same kind of asset: the CPF top-up is a guaranteed payout for life no matter how long you live, while the invested lump sum can fluctuate with markets and isn't guaranteed to last — the 4% figure is a common rule-of-thumb withdrawal rate, not a promise. CPF top-ups may also qualify for tax relief (check current caps on IRAS) — investment gains don't get that treatment. This is a simplified comparison, not investment advice.`;
+
+    document.getElementById('cmp-results').style.display = 'block';
+  });
+
+  // ---------- Retire at 60 or 65 (Premium) ----------
+  const COMBINED_CPF_RATE_55_65 = 0.25; // rough blended employer+employee rate for the 55-65 age brackets
+
+  document.getElementById('r60-calc-btn').addEventListener('click', function(){
+    const age = parseFloat(document.getElementById('r60-age').value) || 0;
+    const oasa = parseFloat(document.getElementById('r60-oasa').value) || 0;
+    const salary = parseFloat(document.getElementById('r60-salary').value) || 0;
+    const expenses = parseFloat(document.getElementById('r60-expenses').value) || 0;
+    const bridgeSavings = parseFloat(document.getElementById('r60-bridge-savings').value) || 0;
+
+    const yearsTo65 = Math.max(0, 65 - age);
+    const bridgeMonths = 60; // fixed 5-year gap between age 60 and CPF LIFE's earliest start at 65
+    const bridgeNeeded = expenses * bridgeMonths;
+    const bridgeShortfall = bridgeNeeded - bridgeSavings;
+
+    // Base RA growth (existing balance keeps earning interest regardless of work status)
+    const baseRA = Math.min(oasa * Math.pow(1 + GROWTH_RATE, yearsTo65), ERS_CAP);
+
+    // Extra CPF built up if still working/contributing between 60 and 65 (5 more years)
+    const extraContributions = salary * COMBINED_CPF_RATE_55_65 * 12 * 5;
+    const raIfRetire65 = Math.min(baseRA + extraContributions, ERS_CAP);
+    const raIfRetire60 = baseRA;
+
+    const payout65 = interpolatePayout(raIfRetire65);
+    const payout60 = interpolatePayout(raIfRetire60);
+
+    document.getElementById('r60-bridge-needed').textContent = fmtProj(bridgeNeeded);
+    document.getElementById('r60-bridge-status-label').textContent = bridgeShortfall > 0 ? 'Bridge shortfall vs. your savings' : 'Bridge fully covered — surplus';
+    document.getElementById('r60-bridge-status').textContent = fmtProj(Math.abs(bridgeShortfall));
+    document.getElementById('r60-payout-65').textContent = fmtProj(payout65) + '/mo';
+    document.getElementById('r60-payout-60').textContent = fmtProj(payout60) + '/mo';
+
+    const payoutGap = payout65 - payout60;
+    document.getElementById('r60-note').innerHTML =
+      `Retiring at 60 means covering ${fmtProj(bridgeNeeded)} of expenses yourself for 5 years before CPF LIFE can start, ${bridgeShortfall > 0 ? `leaving a shortfall of ${fmtProj(bridgeShortfall)} against your stated savings` : `which your stated savings would cover`}. It also means about ${fmtProj(payoutGap)}/month less in CPF LIFE payout for life, since you'd miss 5 years of CPF contributions (estimated at a rough ${Math.round(COMBINED_CPF_RATE_55_65*100)}% combined rate on your salary — check the free CPF Contribution Calculator for your exact age-based rate). Doesn't account for salary growth, inflation, or CPF LIFE deferment past 65, which increases payouts further.`;
+
+    document.getElementById('r60-results').style.display = 'block';
+  });
+
+
+  // TODO: replace TIER2_LINK with your real Stripe Payment Link for the $5.90 tier once created
+  const TIER2_LINK = "https://buy.stripe.com/bJefZjgIc2v8d2XaCLb7y05";
+  ['premiumCta', 'premiumCta3', 'premiumCta4'].forEach(id => {
+    const el = document.getElementById(id);
+    el.addEventListener('click', function(e){
+      e.preventDefault();
+      if(TIER2_LINK){
+        window.open(TIER2_LINK, '_blank', 'noopener');
+      } else {
+        alert('Premium access isn\'t set up yet — check back soon!');
+      }
+    });
+  });
+</script>
+
+<a class="fb-btn" href="chop-feedback.html" style="text-decoration:none;">✎ Feedback</a>
+<!-- Cloudflare Web Analytics -->
+<script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "4fcc4037ceb54a8795588df3465c7522"}'></script>
+</body>
+</html>

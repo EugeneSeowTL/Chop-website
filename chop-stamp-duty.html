@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CHOP. — Stamp Duty (BSD/ABSD) Calculator</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='44' fill='none' stroke='%23B4382A' stroke-width='7'/%3E%3Ctext x='50' y='64' font-size='44' text-anchor='middle' fill='%23B4382A' font-family='Georgia,serif' font-weight='700'%3EC%3C/text%3E%3C/svg%3E">
+<meta name="description" content="Free BSD and ABSD stamp duty calculator for Singapore property purchases — citizen, PR, foreigner and entity rates, 2026 IRAS tiers.">
+<meta property="og:title" content="Stamp Duty (BSD/ABSD) Calculator — CHOP.">
+<meta property="og:description" content="Free BSD and ABSD stamp duty calculator for Singapore property purchases — citizen, PR, foreigner and entity rates, 2026 IRAS tiers.">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=IBM+Plex+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#0F2B3D; --navy-2:#163A4F; --navy-3:#0A1F2C;
+    --paper:#F5EFE0; --paper-line:#D8CDB0; --paper-2:#EDE4CD;
+    --brass:#C79A3D; --brass-soft:#DDBB74;
+    --stamp:#B4382A; --stamp-dark:#8F2A1F;
+    --ink:#1C1B19; --ink-soft:#5B5648; --mint:#3F6B4C;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--navy);color:var(--paper);font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased;}
+  a{color:inherit;text-decoration:none;}
+  header{display:flex;align-items:center;justify-content:space-between;padding:26px 6vw;}
+  .logo{font-family:'Fraunces',serif;font-weight:700;font-size:24px;}
+  .logo span{color:var(--brass);}
+  .back{font-family:'IBM Plex Mono',monospace;font-size:13px;opacity:0.75;}
+  .back:hover{opacity:1;}
+  .section-wrap{max-width:920px;margin:0 auto;padding:2vh 6vw 8vh;}
+  .section-label{font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:0.14em;color:var(--brass-soft);text-transform:uppercase;text-align:center;margin-bottom:10px;}
+  h1.section-title{font-family:'Fraunces',serif;font-weight:600;font-size:clamp(28px,4vw,40px);text-align:center;margin:0 0 12px;}
+  p.section-sub{text-align:center;color:#C9C0A9;max-width:56ch;margin:0 auto 18px;font-size:15.5px;line-height:1.6;}
+  .rates-badge{display:inline-flex;align-items:center;gap:6px;font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:0.04em;color:var(--brass-soft);background:rgba(199,154,61,0.12);border:1px solid rgba(199,154,61,0.3);padding:6px 14px;border-radius:14px;margin:0 auto 32px;display:flex;width:fit-content;}
+
+  .passbook{background:var(--paper);color:var(--ink);border-radius:4px;box-shadow:0 40px 80px -30px rgba(0,0,0,0.6);overflow:hidden;}
+  .perforation{height:22px;background:repeating-linear-gradient(90deg, var(--navy) 0 7px, transparent 7px 16px);}
+  .passbook-inner{padding:38px 42px 42px;}
+  @media (max-width:640px){ .passbook-inner{padding:26px 20px 32px;} }
+  .pb-topline{display:flex;justify-content:space-between;align-items:baseline;font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--ink-soft);border-bottom:2px solid var(--ink);padding-bottom:14px;margin-bottom:20px;letter-spacing:0.04em;}
+  .pb-topline .book-title{font-family:'Fraunces',serif;font-weight:600;font-size:19px;color:var(--ink);letter-spacing:0;}
+
+  .field-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px 24px;margin-bottom:8px;}
+  @media (max-width:640px){ .field-grid{grid-template-columns:1fr;} }
+  .field{display:flex;align-items:center;justify-content:space-between;border-bottom:1px dashed var(--paper-line);padding:12px 0;gap:12px;}
+  .field label{font-size:13.5px;color:var(--ink-soft);}
+  .field .cur{font-family:'IBM Plex Mono',monospace;color:var(--ink-soft);margin-right:6px;font-size:13px;}
+  .field input, .field select{
+    border:none;background:transparent;font-family:'IBM Plex Mono',monospace;font-size:15px;font-weight:600;color:var(--ink);
+    outline:none;padding:2px 0;border-bottom:1px solid transparent;
+  }
+  .field input{width:140px;text-align:right;}
+  .field input:focus, .field select:focus{border-bottom:1px solid var(--stamp);}
+  .field select{width:180px;text-align:right;-webkit-appearance:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%235B5648'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right center;padding-right:16px;}
+
+  .status-line{font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--ink-soft);background:var(--paper-2);border-radius:3px;padding:12px 16px;margin:18px 0 6px;line-height:1.6;}
+  .status-line b{color:var(--ink);}
+
+  .ledger-rows{margin-top:20px;border-top:2px solid var(--ink);padding-top:6px;}
+  .ledger-row{display:flex;justify-content:space-between;align-items:baseline;padding:11px 0;border-bottom:1px dashed var(--paper-line);font-family:'IBM Plex Mono',monospace;font-size:14px;}
+  .ledger-row .desc{color:var(--ink-soft);}
+  .ledger-row .amt{font-weight:600;}
+  .ledger-row.total{border-bottom:none;border-top:2px solid var(--ink);margin-top:4px;padding-top:16px;font-size:16px;}
+  .ledger-row.total .amt{color:var(--mint);font-family:'Fraunces',serif;font-size:22px;font-weight:600;}
+
+  .bsd-breakdown{margin-top:14px;padding:14px 16px;background:var(--paper-2);border-radius:3px;font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--ink-soft);line-height:1.9;display:none;}
+  .bsd-breakdown .bb-title{font-weight:700;color:var(--ink);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px;}
+
+  .pb-hint{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--ink-soft);margin-top:16px;opacity:0.85;line-height:1.6;}
+  .pb-hint a{color:var(--stamp-dark);text-decoration:underline;}
+
+  .tabs-row{max-width:920px;margin:38px auto 0;display:flex;gap:10px;flex-wrap:wrap;justify-content:center;}
+  .tab-chip{font-family:'IBM Plex Mono',monospace;font-size:12.5px;padding:11px 18px;border-radius:20px;border:1px solid rgba(245,239,224,0.22);color:var(--paper);opacity:0.85;display:flex;align-items:center;gap:8px;}
+  .tab-chip.active{background:var(--brass);color:var(--navy-3);border-color:var(--brass);opacity:1;font-weight:600;}
+  .tab-chip .paid{font-size:9.5px;background:var(--brass);color:var(--navy-3);padding:2px 6px;border-radius:8px;font-weight:700;}
+
+  footer{border-top:1px solid rgba(245,239,224,0.12);padding:34px 6vw;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:#9C927C;}
+
+  .fb-btn{position:fixed;right:24px;bottom:24px;z-index:50;font-family:'IBM Plex Mono',monospace;font-size:12.5px;letter-spacing:0.04em;background:var(--stamp);color:#FBF0E7;border:none;padding:13px 20px;border-radius:24px;cursor:pointer;box-shadow:0 12px 30px -10px rgba(0,0,0,0.6);display:flex;align-items:center;gap:8px;transition:transform .15s, background .2s;}
+  .fb-btn:hover{background:var(--stamp-dark);transform:translateY(-2px);}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">CHOP<span>.</span></div>
+  <a class="back" href="index.html">← Back home</a>
+</header>
+
+<div class="section-wrap">
+  <div class="section-label">Tool 07 — Free</div>
+  <h1 class="section-title">Stamp Duty Calculator</h1>
+  <p class="section-sub">Work out your Buyer's Stamp Duty (BSD) and Additional Buyer's Stamp Duty (ABSD) before you commit to a property — the tax bill most first-time buyers forget to budget for.</p>
+  <div class="rates-badge">🗓 Figures current as of August 2026 — rates change most years, check before relying on this for a major decision</div>
+
+  <div class="passbook">
+    <div class="perforation"></div>
+    <div class="passbook-inner">
+      <div class="pb-topline">
+        <span class="book-title">Stamp Duty Ledger</span>
+        <span>IRAS RATES: 2026</span>
+      </div>
+
+      <div class="field-grid">
+        <div class="field" style="grid-column:1 / -1;">
+          <label>Purchase price (or valuation, if higher)</label>
+          <div><span class="cur">SGD</span><input type="number" inputmode="decimal" id="sd-price" placeholder="1200000" /></div>
+        </div>
+        <div class="field">
+          <label>Buyer profile</label>
+          <select id="sd-profile">
+            <option value="citizen">Singapore Citizen</option>
+            <option value="pr">Permanent Resident</option>
+            <option value="foreigner">Foreigner</option>
+            <option value="entity">Entity / Trust</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>This is your…</label>
+          <select id="sd-count">
+            <option value="1">1st residential property</option>
+            <option value="2">2nd residential property</option>
+            <option value="3">3rd or subsequent property</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="status-line" id="sdStatusLine">Enter the purchase price and your profile to see your stamp duty.</div>
+
+      <div class="ledger-rows" id="sdLedgerRows" style="display:none;">
+        <div class="ledger-row"><span class="desc">Buyer's Stamp Duty (BSD)</span><span class="amt" id="sdBsdAmt">$0</span></div>
+        <div class="ledger-row"><span class="desc" id="sdAbsdLabel">Additional Buyer's Stamp Duty (ABSD)</span><span class="amt" id="sdAbsdAmt">$0</span></div>
+        <div class="ledger-row total"><span class="desc">Total stamp duty payable</span><span class="amt" id="sdTotalAmt">$0</span></div>
+
+        <div class="bsd-breakdown" id="sdBreakdown">
+          <div class="bb-title">BSD tier breakdown</div>
+          <div id="sdBreakdownRows"></div>
+        </div>
+      </div>
+
+      <div class="pb-hint">
+        BSD applies to every buyer regardless of residency, on a progressive scale: 1% on the first $180,000, 2% on the next $180,000, 3% on the next $640,000, 4% on the next $500,000, 5% on the next $1.5M, and 6% above $3M. ABSD is layered on top and depends on your residency status and how many residential properties you already own — Singapore Citizens pay 0% on a first property, PRs pay 5%, foreigners pay a flat 60%, entities 65%. Nationals of Iceland, Liechtenstein, Norway, Switzerland, and the USA are treated as Citizens under free trade agreements (not reflected in this simple calculator — check IRAS if this applies to you). This tool doesn't account for joint-purchase structuring, married-couple remissions, or trust arrangements, which can change your actual figure — always confirm with <a href="https://www.iras.gov.sg" target="_blank" rel="noopener">IRAS</a> or a conveyancing lawyer before committing to a purchase.
+      </div>
+    </div>
+  </div>
+
+  <div class="tabs-row">
+    <a class="tab-chip" href="chop-income.html" style="text-decoration:none;">Income &amp; Spend</a>
+    <a class="tab-chip" href="chop-cpf.html" style="text-decoration:none;">CPF Contribution</a>
+    <a class="tab-chip" href="chop-car-loan.html" style="text-decoration:none;">Car Loan</a>
+    <a class="tab-chip" href="chop-hdb.html" style="text-decoration:none;">HDB Affordability</a>
+    <div class="tab-chip active">Stamp Duty</div>
+    <a class="tab-chip" href="chop-income-tax.html" style="text-decoration:none;">Income Tax</a>
+    <a class="tab-chip" href="chop-housing-grants.html" style="text-decoration:none;">Housing Grants</a>
+    <a class="tab-chip" href="chop-cv.html" style="text-decoration:none;">CV Tools</a>
+    <a class="tab-chip" href="chop-planner.html" style="text-decoration:none;">Financial Planner <span class="paid">paid</span></a>
+  </div>
+</div>
+
+<footer>A Singapore money toolkit — free tools, honest maths, no long story. · <a href="chop-terms.html" style="text-decoration:underline;">Terms &amp; Disclaimer</a></footer>
+
+<script>
+  const BSD_TIERS = [
+    { upTo: 180000,   rate: 0.01 },
+    { upTo: 360000,   rate: 0.02 },
+    { upTo: 1000000,  rate: 0.03 },
+    { upTo: 1500000,  rate: 0.04 },
+    { upTo: 3000000,  rate: 0.05 },
+    { upTo: Infinity, rate: 0.06 },
+  ];
+
+  const ABSD_RATES = {
+    citizen:    { 1: 0.00, 2: 0.20, 3: 0.30 },
+    pr:         { 1: 0.05, 2: 0.30, 3: 0.35 },
+    foreigner:  { 1: 0.60, 2: 0.60, 3: 0.60 },
+    entity:     { 1: 0.65, 2: 0.65, 3: 0.65 },
+  };
+  const PROFILE_LABELS = { citizen: 'Singapore Citizen', pr: 'Permanent Resident', foreigner: 'Foreigner', entity: 'Entity / Trust' };
+
+  function fmt(n){ return '$' + Math.round(n).toLocaleString('en-SG'); }
+
+  function calcBSD(price){
+    let remaining = price;
+    let prevThreshold = 0;
+    let bsd = 0;
+    const rows = [];
+    for(const tier of BSD_TIERS){
+      const bandSize = tier.upTo - prevThreshold;
+      const tierAmount = Math.min(remaining, bandSize);
+      if(tierAmount <= 0) break;
+      const tierDuty = tierAmount * tier.rate;
+      bsd += tierDuty;
+      rows.push(`${fmt(tierAmount)} @ ${(tier.rate*100).toFixed(0)}% = ${fmt(tierDuty)}`);
+      remaining -= tierAmount;
+      prevThreshold = tier.upTo;
+      if(remaining <= 0) break;
+    }
+    return { bsd, rows };
+  }
+
+  function calc(){
+    const price = parseFloat(document.getElementById('sd-price').value);
+    const profile = document.getElementById('sd-profile').value;
+    const count = document.getElementById('sd-count').value;
+
+    const statusLine = document.getElementById('sdStatusLine');
+    const ledgerRows = document.getElementById('sdLedgerRows');
+    const breakdown = document.getElementById('sdBreakdown');
+
+    if(!price || price <= 0){
+      statusLine.textContent = "Enter the purchase price and your profile to see your stamp duty.";
+      ledgerRows.style.display = 'none';
+      breakdown.style.display = 'none';
+      return;
+    }
+
+    const { bsd, rows } = calcBSD(price);
+    const absdRate = ABSD_RATES[profile][count];
+    const absd = price * absdRate;
+    const total = bsd + absd;
+
+    document.getElementById('sdBsdAmt').textContent = fmt(bsd);
+    document.getElementById('sdAbsdLabel').textContent = `Additional Buyer's Stamp Duty (ABSD, ${(absdRate*100).toFixed(0)}%)`;
+    document.getElementById('sdAbsdAmt').textContent = fmt(absd);
+    document.getElementById('sdTotalAmt').textContent = fmt(total);
+
+    document.getElementById('sdBreakdownRows').innerHTML = rows.join('<br>');
+    breakdown.style.display = 'block';
+
+    const pctOfPrice = ((total / price) * 100).toFixed(1);
+    statusLine.innerHTML = `As a <b>${PROFILE_LABELS[profile]}</b> buying your <b>${count === '1' ? '1st' : count === '2' ? '2nd' : '3rd or subsequent'}</b> residential property, your total stamp duty comes to about <b>${pctOfPrice}%</b> of the purchase price.`;
+
+    ledgerRows.style.display = 'block';
+  }
+
+  ['sd-price','sd-profile','sd-count'].forEach(id => {
+    document.getElementById(id).addEventListener('input', calc);
+    document.getElementById(id).addEventListener('change', calc);
+  });
+</script>
+
+<a class="fb-btn" href="chop-feedback.html" style="text-decoration:none;">✎ Feedback</a>
+
+<script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "4fcc4037ceb54a8795588df3465c7522"}'></script>
+</body>
+</html>

@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CHOP. — Income &amp; Spend Calculator</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='44' fill='none' stroke='%23B4382A' stroke-width='7'/%3E%3Ctext x='50' y='64' font-size='44' text-anchor='middle' fill='%23B4382A' font-family='Georgia,serif' font-weight='700'%3EC%3C/text%3E%3C/svg%3E">
+<meta name="description" content="Free income and spending calculator for Singapore — see your monthly balance and savings rate instantly, no account needed.">
+<meta property="og:title" content="Income & Spend Calculator — CHOP.">
+<meta property="og:description" content="Free income and spending calculator for Singapore — see your monthly balance and savings rate instantly, no account needed.">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=IBM+Plex+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#0F2B3D; --navy-2:#163A4F; --navy-3:#0A1F2C;
+    --paper:#F5EFE0; --paper-line:#D8CDB0; --paper-2:#EDE4CD;
+    --brass:#C79A3D; --brass-soft:#DDBB74;
+    --stamp:#B4382A; --stamp-dark:#8F2A1F;
+    --ink:#1C1B19; --ink-soft:#5B5648; --mint:#3F6B4C;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--navy);color:var(--paper);font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased;}
+  a{color:inherit;text-decoration:none;}
+  header{display:flex;align-items:center;justify-content:space-between;padding:26px 6vw;}
+  .logo{font-family:'Fraunces',serif;font-weight:700;font-size:24px;}
+  .logo span{color:var(--brass);}
+  .back{font-family:'IBM Plex Mono',monospace;font-size:13px;opacity:0.75;}
+  .back:hover{opacity:1;}
+  .section-wrap{max-width:920px;margin:0 auto;padding:2vh 6vw 8vh;}
+  .section-label{font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:0.14em;color:var(--brass-soft);text-transform:uppercase;text-align:center;margin-bottom:10px;}
+  h1.section-title{font-family:'Fraunces',serif;font-weight:600;font-size:clamp(28px,4vw,40px);text-align:center;margin:0 0 12px;}
+  p.section-sub{text-align:center;color:#C9C0A9;max-width:52ch;margin:0 auto 44px;font-size:15.5px;line-height:1.6;}
+  .passbook{background:var(--paper);color:var(--ink);border-radius:4px;box-shadow:0 40px 80px -30px rgba(0,0,0,0.6);overflow:hidden;}
+  .perforation{height:22px;background:repeating-linear-gradient(90deg, var(--navy) 0 7px, transparent 7px 16px);}
+  .passbook-inner{padding:38px 42px 42px;}
+  @media (max-width:640px){ .passbook-inner{padding:26px 20px 32px;} }
+  .pb-topline{display:flex;justify-content:space-between;align-items:baseline;font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--ink-soft);border-bottom:2px solid var(--ink);padding-bottom:14px;margin-bottom:20px;letter-spacing:0.04em;}
+  .pb-topline .book-title{font-family:'Fraunces',serif;font-weight:600;font-size:19px;color:var(--ink);letter-spacing:0;}
+  .field-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px 24px;margin-bottom:8px;}
+  @media (max-width:640px){ .field-grid{grid-template-columns:1fr;} }
+  .field{display:flex;align-items:center;justify-content:space-between;border-bottom:1px dashed var(--paper-line);padding:12px 0;gap:12px;}
+  .field label{font-size:13.5px;color:var(--ink-soft);font-family:'Inter',sans-serif;}
+  .field .cur{font-family:'IBM Plex Mono',monospace;color:var(--ink-soft);margin-right:6px;font-size:13px;}
+  .field input{width:120px;text-align:right;border:none;background:transparent;font-family:'IBM Plex Mono',monospace;font-size:15px;font-weight:600;color:var(--ink);border-bottom:1px solid transparent;padding:2px 0;outline:none;}
+  .field input:focus{border-bottom:1px solid var(--stamp);}
+  .field.income label{color:var(--mint);font-weight:600;}
+  .field.income{border-bottom:2px solid var(--ink);}
+  .pb-result{margin-top:26px;display:grid;grid-template-columns:1fr auto;gap:24px;align-items:center;background:var(--paper-2);border-radius:3px;padding:22px 24px;position:relative;overflow:hidden;}
+  @media (max-width:640px){ .pb-result{grid-template-columns:1fr;} }
+  .pb-result-text .label{font-family:'IBM Plex Mono',monospace;font-size:11.5px;letter-spacing:0.1em;color:var(--ink-soft);text-transform:uppercase;margin-bottom:6px;}
+  .pb-result-text .value{font-family:'Fraunces',serif;font-weight:600;font-size:34px;color:var(--ink);}
+  .pb-result-text .value.neg{color:var(--stamp-dark);}
+  .pb-result-text .note{font-size:13.5px;color:var(--ink-soft);margin-top:8px;max-width:44ch;line-height:1.5;}
+  .stamp-wrap{display:flex;align-items:center;justify-content:center;width:120px;height:120px;flex-shrink:0;}
+  .stamp{width:104px;height:104px;border:3px solid var(--stamp);border-radius:50%;display:flex;align-items:center;justify-content:center;transform:rotate(-14deg) scale(0.6);opacity:0;transition:transform .5s cubic-bezier(.2,1.4,.4,1), opacity .3s;position:relative;}
+  .stamp.show{opacity:0.92;transform:rotate(-14deg) scale(1);}
+  .stamp::before{content:"";position:absolute;inset:8px;border:1px solid var(--stamp);border-radius:50%;}
+  .stamp-text{font-family:'IBM Plex Mono',monospace;color:var(--stamp);font-weight:700;font-size:9px;text-align:center;line-height:1.35;letter-spacing:0.02em;padding:0 6px;}
+  .pb-hint{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--ink-soft);margin-top:14px;opacity:0.8;}
+  .tabs-row{max-width:920px;margin:38px auto 0;display:flex;gap:10px;flex-wrap:wrap;justify-content:center;}
+  .tab-chip{font-family:'IBM Plex Mono',monospace;font-size:12.5px;letter-spacing:0.03em;padding:11px 18px;border-radius:20px;border:1px solid rgba(245,239,224,0.22);color:var(--paper);opacity:0.85;position:relative;cursor:default;display:flex;align-items:center;gap:8px;}
+  .tab-chip.active{background:var(--brass);color:var(--navy-3);border-color:var(--brass);opacity:1;font-weight:600;}
+  .tab-chip .soon{font-size:9.5px;background:rgba(245,239,224,0.14);padding:2px 6px;border-radius:8px;}
+  .tab-chip .paid{font-size:9.5px;background:var(--brass);color:var(--navy-3);padding:2px 6px;border-radius:8px;font-weight:700;}
+  footer{border-top:1px solid rgba(245,239,224,0.12);padding:34px 6vw;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:#9C927C;}
+  .fb-btn{position:fixed;right:24px;bottom:24px;z-index:50;font-family:'IBM Plex Mono',monospace;font-size:12.5px;letter-spacing:0.04em;background:var(--stamp);color:#FBF0E7;border:none;padding:13px 20px;border-radius:24px;cursor:pointer;box-shadow:0 12px 30px -10px rgba(0,0,0,0.6);display:flex;align-items:center;gap:8px;transition:transform .15s, background .2s;}
+  .fb-btn:hover{background:var(--stamp-dark);transform:translateY(-2px);}
+  .fb-overlay{position:fixed;inset:0;background:rgba(10,31,44,0.72);z-index:60;display:none;align-items:center;justify-content:center;padding:20px;}
+  .fb-overlay.show{display:flex;}
+  .fb-card{background:var(--paper);color:var(--ink);border-radius:4px;max-width:420px;width:100%;box-shadow:0 40px 80px -20px rgba(0,0,0,0.6);overflow:hidden;}
+  .fb-card .perforation{height:16px;background:repeating-linear-gradient(90deg, var(--navy) 0 6px, transparent 6px 13px);}
+  .fb-card-inner{padding:26px 26px 24px;}
+  .fb-card-title{font-family:'Fraunces',serif;font-weight:600;font-size:19px;margin:0 0 6px;}
+  .fb-card-sub{font-size:13px;color:var(--ink-soft);margin:0 0 18px;line-height:1.5;}
+  .fb-field{margin-bottom:14px;}
+  .fb-field label{display:block;font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:0.06em;color:var(--ink-soft);text-transform:uppercase;margin-bottom:6px;}
+  .fb-field select, .fb-field textarea, .fb-field input{width:100%;border:1px solid var(--paper-line);background:var(--paper-2);border-radius:2px;font-family:'Inter',sans-serif;font-size:13.5px;color:var(--ink);padding:10px 12px;outline:none;box-sizing:border-box;}
+  .fb-field select{-webkit-appearance:none;appearance:none;font-family:'IBM Plex Mono',monospace;}
+  .fb-field textarea{resize:vertical;min-height:80px;font-family:'Inter',sans-serif;}
+  .fb-field select:focus, .fb-field textarea:focus, .fb-field input:focus{border-color:var(--stamp);}
+  .fb-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:6px;}
+  .fb-cancel{font-family:'IBM Plex Mono',monospace;font-size:12.5px;background:transparent;border:none;color:var(--ink-soft);cursor:pointer;padding:10px 14px;}
+  .fb-submit{font-family:'IBM Plex Mono',monospace;font-size:12.5px;background:var(--stamp);color:#FBF0E7;border:none;border-radius:2px;padding:11px 18px;cursor:pointer;}
+  .fb-submit:hover{background:var(--stamp-dark);}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">CHOP<span>.</span></div>
+  <a class="back" href="index.html">← Back home</a>
+</header>
+
+<div class="section-wrap">
+  <div class="section-label">Tool 01 — Free</div>
+  <h1 class="section-title">Income &amp; Spend Calculator</h1>
+  <p class="section-sub">Fill in one line at a time. Your balance updates as you go — and gets a proper stamp once it's settled.</p>
+
+  <div class="passbook">
+    <div class="perforation"></div>
+    <div class="passbook-inner">
+      <div class="pb-topline">
+        <span class="book-title">Monthly Ledger</span>
+        <span>ENTRY DATE: TODAY</span>
+      </div>
+
+      <div class="field income">
+        <label>Take-home income</label>
+        <div><span class="cur">SGD</span><input type="number" inputmode="decimal" id="income" placeholder="4200" /></div>
+      </div>
+
+      <div class="field-grid">
+        <div class="field"><label>Housing / rent</label><div><span class="cur">SGD</span><input type="number" inputmode="decimal" id="housing" placeholder="1100" /></div></div>
+        <div class="field"><label>Food</label><div><span class="cur">SGD</span><input type="number" inputmode="decimal" id="food" placeholder="600" /></div></div>
+        <div class="field"><label>Transport</label><div><span class="cur">SGD</span><input type="number" inputmode="decimal" id="transport" placeholder="180" /></div></div>
+        <div class="field"><label>Insurance</label><div><span class="cur">SGD</span><input type="number" inputmode="decimal" id="insurance" placeholder="150" /></div></div>
+        <div class="field"><label>CPF (auto if employed)</label><div><span class="cur">SGD</span><input type="number" inputmode="decimal" id="cpf" placeholder="0" /></div></div>
+        <div class="field"><label>Other spending</label><div><span class="cur">SGD</span><input type="number" inputmode="decimal" id="other" placeholder="250" /></div></div>
+      </div>
+
+      <div class="pb-result">
+        <div class="pb-result-text">
+          <div class="label">Balance this month</div>
+          <div class="value" id="resultValue">$0</div>
+          <div class="note" id="resultNote">Enter your income and spending above — your balance and savings rate will settle here.</div>
+        </div>
+        <div class="stamp-wrap">
+          <div class="stamp" id="stamp">
+            <div class="stamp-text" id="stampText">SETTLED</div>
+          </div>
+        </div>
+      </div>
+      <div class="pb-hint">Figures stay on your device — nothing is saved or sent anywhere.</div>
+    </div>
+  </div>
+
+  <div class="tabs-row">
+    <div class="tab-chip active">Income &amp; Spend</div>
+    <a class="tab-chip" href="chop-cpf.html" style="text-decoration:none;">CPF Contribution</a>
+    <a class="tab-chip" href="chop-car-loan.html" style="text-decoration:none;">Car Loan</a>
+    <a class="tab-chip" href="chop-hdb.html" style="text-decoration:none;">HDB Affordability</a>
+    <a class="tab-chip" href="chop-stamp-duty.html" style="text-decoration:none;">Stamp Duty</a>
+    <a class="tab-chip" href="chop-income-tax.html" style="text-decoration:none;">Income Tax</a>
+    <a class="tab-chip" href="chop-housing-grants.html" style="text-decoration:none;">Housing Grants</a>
+    <a class="tab-chip" href="chop-cv.html" style="text-decoration:none;">CV Tools</a>
+    <a class="tab-chip" href="chop-planner.html" style="text-decoration:none;">Financial Planner <span class="paid">paid</span></a>
+  </div>
+</div>
+
+<footer>A Singapore money toolkit — free tools, honest maths, no long story. · <a href="chop-terms.html" style="text-decoration:underline;">Terms & Disclaimer</a></footer>
+
+<script>
+  const ids = ['income','housing','food','transport','insurance','cpf','other'];
+  const inputs = {};
+  ids.forEach(id => inputs[id] = document.getElementById(id));
+  const resultValue = document.getElementById('resultValue');
+  const resultNote = document.getElementById('resultNote');
+  const stamp = document.getElementById('stamp');
+  const stampText = document.getElementById('stampText');
+  function num(el){ const v = parseFloat(el.value); return isNaN(v) ? 0 : v; }
+  function fmt(n){ const sign = n < 0 ? '−' : ''; return sign + '$' + Math.abs(Math.round(n)).toLocaleString('en-SG'); }
+  function calc(){
+    const income = num(inputs.income);
+    const spend = num(inputs.housing) + num(inputs.food) + num(inputs.transport) + num(inputs.insurance) + num(inputs.cpf) + num(inputs.other);
+    const balance = income - spend;
+    resultValue.textContent = fmt(balance);
+    resultValue.classList.toggle('neg', balance < 0);
+    if(income <= 0){
+      resultNote.textContent = "Enter your income and spending above — your balance and savings rate will settle here.";
+      stamp.classList.remove('show');
+      return;
+    }
+    const rate = Math.round((balance / income) * 100);
+    if(balance < 0){
+      resultNote.textContent = "You're spending more than you're bringing in this month. Worth a closer look at the biggest line items.";
+      stampText.textContent = "OVERDRAWN";
+    } else if(rate < 10){
+      resultNote.textContent = `That's a ${rate}% savings rate. Many money guides suggest aiming for at least 20% where possible — a small, steady buffer helps.`;
+      stampText.textContent = "NOTED";
+    } else if(rate < 25){
+      resultNote.textContent = `A ${rate}% savings rate — a solid, sustainable pace for most stages of working life.`;
+      stampText.textContent = "CHOP! STAMP! CONFIRMED!";
+    } else {
+      resultNote.textContent = `A ${rate}% savings rate — well above the typical guideline. Good position to build toward bigger goals.`;
+      stampText.textContent = "CHOP! STAMP! CONFIRMED!";
+    }
+    stamp.classList.remove('show');
+    void stamp.offsetWidth;
+    stamp.classList.add('show');
+  }
+  ids.forEach(id => inputs[id].addEventListener('input', calc));
+</script>
+
+<a class="fb-btn" href="chop-feedback.html" style="text-decoration:none;">✎ Feedback</a>
+<!-- Cloudflare Web Analytics -->
+<script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "4fcc4037ceb54a8795588df3465c7522"}'></script>
+</body>
+</html>

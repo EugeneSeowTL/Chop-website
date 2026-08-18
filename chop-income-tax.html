@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CHOP. — Income Tax Calculator</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='44' fill='none' stroke='%23B4382A' stroke-width='7'/%3E%3Ctext x='50' y='64' font-size='44' text-anchor='middle' fill='%23B4382A' font-family='Georgia,serif' font-weight='700'%3EC%3C/text%3E%3C/svg%3E">
+<meta name="description" content="Free Singapore income tax calculator using IRAS YA2026 progressive resident tax rates — includes an automatic CPF relief estimate.">
+<meta property="og:title" content="Income Tax Calculator — CHOP.">
+<meta property="og:description" content="Free Singapore income tax calculator using IRAS YA2026 progressive resident tax rates — includes an automatic CPF relief estimate.">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=IBM+Plex+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#0F2B3D; --navy-2:#163A4F; --navy-3:#0A1F2C;
+    --paper:#F5EFE0; --paper-line:#D8CDB0; --paper-2:#EDE4CD;
+    --brass:#C79A3D; --brass-soft:#DDBB74;
+    --stamp:#B4382A; --stamp-dark:#8F2A1F;
+    --ink:#1C1B19; --ink-soft:#5B5648; --mint:#3F6B4C;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--navy);color:var(--paper);font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased;}
+  a{color:inherit;text-decoration:none;}
+  header{display:flex;align-items:center;justify-content:space-between;padding:26px 6vw;}
+  .logo{font-family:'Fraunces',serif;font-weight:700;font-size:24px;}
+  .logo span{color:var(--brass);}
+  .back{font-family:'IBM Plex Mono',monospace;font-size:13px;opacity:0.75;}
+  .back:hover{opacity:1;}
+  .section-wrap{max-width:920px;margin:0 auto;padding:2vh 6vw 8vh;}
+  .section-label{font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:0.14em;color:var(--brass-soft);text-transform:uppercase;text-align:center;margin-bottom:10px;}
+  h1.section-title{font-family:'Fraunces',serif;font-weight:600;font-size:clamp(28px,4vw,40px);text-align:center;margin:0 0 12px;}
+  p.section-sub{text-align:center;color:#C9C0A9;max-width:56ch;margin:0 auto 18px;font-size:15.5px;line-height:1.6;}
+  .rates-badge{display:inline-flex;align-items:center;gap:6px;font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:0.04em;color:var(--brass-soft);background:rgba(199,154,61,0.12);border:1px solid rgba(199,154,61,0.3);padding:6px 14px;border-radius:14px;margin:0 auto 32px;display:flex;width:fit-content;}
+
+  .passbook{background:var(--paper);color:var(--ink);border-radius:4px;box-shadow:0 40px 80px -30px rgba(0,0,0,0.6);overflow:hidden;}
+  .perforation{height:22px;background:repeating-linear-gradient(90deg, var(--navy) 0 7px, transparent 7px 16px);}
+  .passbook-inner{padding:38px 42px 42px;}
+  @media (max-width:640px){ .passbook-inner{padding:26px 20px 32px;} }
+  .pb-topline{display:flex;justify-content:space-between;align-items:baseline;font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--ink-soft);border-bottom:2px solid var(--ink);padding-bottom:14px;margin-bottom:20px;letter-spacing:0.04em;}
+  .pb-topline .book-title{font-family:'Fraunces',serif;font-weight:600;font-size:19px;color:var(--ink);letter-spacing:0;}
+
+  .field-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px 24px;margin-bottom:8px;}
+  @media (max-width:640px){ .field-grid{grid-template-columns:1fr;} }
+  .field{display:flex;align-items:center;justify-content:space-between;border-bottom:1px dashed var(--paper-line);padding:12px 0;gap:12px;}
+  .field label{font-size:13.5px;color:var(--ink-soft);}
+  .field .cur{font-family:'IBM Plex Mono',monospace;color:var(--ink-soft);margin-right:6px;font-size:13px;}
+  .field input{
+    width:140px;text-align:right;border:none;background:transparent;font-family:'IBM Plex Mono',monospace;font-size:15px;font-weight:600;color:var(--ink);
+    outline:none;padding:2px 0;border-bottom:1px solid transparent;
+  }
+  .field input:focus{border-bottom:1px solid var(--stamp);}
+
+  .status-line{font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--ink-soft);background:var(--paper-2);border-radius:3px;padding:12px 16px;margin:18px 0 6px;line-height:1.6;}
+  .status-line b{color:var(--ink);}
+
+  .ledger-rows{margin-top:20px;border-top:2px solid var(--ink);padding-top:6px;}
+  .ledger-row{display:flex;justify-content:space-between;align-items:baseline;padding:11px 0;border-bottom:1px dashed var(--paper-line);font-family:'IBM Plex Mono',monospace;font-size:14px;}
+  .ledger-row .desc{color:var(--ink-soft);}
+  .ledger-row .amt{font-weight:600;}
+  .ledger-row.total{border-bottom:none;border-top:2px solid var(--ink);margin-top:4px;padding-top:16px;font-size:16px;}
+  .ledger-row.total .amt{color:var(--mint);font-family:'Fraunces',serif;font-size:22px;font-weight:600;}
+
+  .pb-hint{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--ink-soft);margin-top:16px;opacity:0.85;line-height:1.6;}
+  .pb-hint a{color:var(--stamp-dark);text-decoration:underline;}
+
+  .tabs-row{max-width:920px;margin:38px auto 0;display:flex;gap:10px;flex-wrap:wrap;justify-content:center;}
+  .tab-chip{font-family:'IBM Plex Mono',monospace;font-size:12.5px;padding:11px 18px;border-radius:20px;border:1px solid rgba(245,239,224,0.22);color:var(--paper);opacity:0.85;display:flex;align-items:center;gap:8px;}
+  .tab-chip.active{background:var(--brass);color:var(--navy-3);border-color:var(--brass);opacity:1;font-weight:600;}
+  .tab-chip .paid{font-size:9.5px;background:var(--brass);color:var(--navy-3);padding:2px 6px;border-radius:8px;font-weight:700;}
+
+  footer{border-top:1px solid rgba(245,239,224,0.12);padding:34px 6vw;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:#9C927C;}
+
+  .fb-btn{position:fixed;right:24px;bottom:24px;z-index:50;font-family:'IBM Plex Mono',monospace;font-size:12.5px;letter-spacing:0.04em;background:var(--stamp);color:#FBF0E7;border:none;padding:13px 20px;border-radius:24px;cursor:pointer;box-shadow:0 12px 30px -10px rgba(0,0,0,0.6);display:flex;align-items:center;gap:8px;transition:transform .15s, background .2s;}
+  .fb-btn:hover{background:var(--stamp-dark);transform:translateY(-2px);}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">CHOP<span>.</span></div>
+  <a class="back" href="index.html">← Back home</a>
+</header>
+
+<div class="section-wrap">
+  <div class="section-label">Tool 08 — Free</div>
+  <h1 class="section-title">Income Tax Calculator</h1>
+  <p class="section-sub">Estimate your Singapore income tax using IRAS's progressive resident rates, with your CPF relief worked out automatically from your age.</p>
+  <div class="rates-badge">🗓 Figures current as of August 2026 (YA2026) — rates change most years, check before relying on this for a major decision</div>
+
+  <div class="passbook">
+    <div class="perforation"></div>
+    <div class="passbook-inner">
+      <div class="pb-topline">
+        <span class="book-title">Tax Ledger</span>
+        <span>IRAS RATES: YA2026</span>
+      </div>
+
+      <div class="field-grid">
+        <div class="field">
+          <label>Annual gross income</label>
+          <div><span class="cur">SGD</span><input type="number" inputmode="decimal" id="it-income" placeholder="80000" /></div>
+        </div>
+        <div class="field">
+          <label>Your age</label>
+          <div><input type="number" inputmode="numeric" id="it-age" placeholder="30" style="width:80px;" /></div>
+        </div>
+        <div class="field" style="grid-column:1 / -1;">
+          <label>Other reliefs (spouse, child, parent, CPF top-up, SRS, etc.)</label>
+          <div><span class="cur">SGD</span><input type="number" inputmode="decimal" id="it-other-reliefs" placeholder="0" /></div>
+        </div>
+      </div>
+
+      <div class="status-line" id="itStatusLine">Enter your income and age to estimate your tax bill.</div>
+
+      <div class="ledger-rows" id="itLedgerRows" style="display:none;">
+        <div class="ledger-row"><span class="desc">Estimated CPF relief (auto)</span><span class="amt" id="itCpfRelief">$0</span></div>
+        <div class="ledger-row"><span class="desc">Total reliefs applied</span><span class="amt" id="itTotalReliefs">$0</span></div>
+        <div class="ledger-row"><span class="desc">Chargeable income</span><span class="amt" id="itChargeable">$0</span></div>
+        <div class="ledger-row"><span class="desc">Effective tax rate</span><span class="amt" id="itEffectiveRate">0%</span></div>
+        <div class="ledger-row total"><span class="desc">Estimated tax payable</span><span class="amt" id="itTaxPayable">$0</span></div>
+      </div>
+
+      <div class="pb-hint">
+        Assumes Singapore tax residency (183+ days in Singapore) and employment income only — non-residents and other income types (rental, director's fees) follow different rules. CPF relief is auto-estimated from your age-based contribution rate on income up to the annual CPF ceiling; enter any other reliefs you're claiming (spouse, child, parent, CPF cash top-up, SRS, etc.) as a single total — total reliefs are capped at $80,000 per YA. There's no personal income tax rebate for YA2026. This is an estimate, not a filing — confirm with <a href="https://www.iras.gov.sg" target="_blank" rel="noopener">IRAS</a> or a tax professional before relying on it.
+      </div>
+    </div>
+  </div>
+
+  <div class="tabs-row">
+    <a class="tab-chip" href="chop-income.html" style="text-decoration:none;">Income &amp; Spend</a>
+    <a class="tab-chip" href="chop-cpf.html" style="text-decoration:none;">CPF Contribution</a>
+    <a class="tab-chip" href="chop-car-loan.html" style="text-decoration:none;">Car Loan</a>
+    <a class="tab-chip" href="chop-hdb.html" style="text-decoration:none;">HDB Affordability</a>
+    <a class="tab-chip" href="chop-stamp-duty.html" style="text-decoration:none;">Stamp Duty</a>
+    <div class="tab-chip active">Income Tax</div>
+    <a class="tab-chip" href="chop-housing-grants.html" style="text-decoration:none;">Housing Grants</a>
+    <a class="tab-chip" href="chop-cv.html" style="text-decoration:none;">CV Tools</a>
+    <a class="tab-chip" href="chop-planner.html" style="text-decoration:none;">Financial Planner <span class="paid">paid</span></a>
+  </div>
+</div>
+
+<footer>A Singapore money toolkit — free tools, honest maths, no long story. · <a href="chop-terms.html" style="text-decoration:underline;">Terms &amp; Disclaimer</a></footer>
+
+<script>
+  // IRAS YA2026 progressive resident tax brackets
+  const TAX_BRACKETS = [
+    { upTo: 20000,    rate: 0.000 },
+    { upTo: 30000,    rate: 0.020 },
+    { upTo: 40000,    rate: 0.035 },
+    { upTo: 80000,    rate: 0.070 },
+    { upTo: 120000,   rate: 0.115 },
+    { upTo: 160000,   rate: 0.150 },
+    { upTo: 200000,   rate: 0.180 },
+    { upTo: 240000,   rate: 0.190 },
+    { upTo: 280000,   rate: 0.195 },
+    { upTo: 320000,   rate: 0.200 },
+    { upTo: 500000,   rate: 0.220 },
+    { upTo: 1000000,  rate: 0.230 },
+    { upTo: Infinity, rate: 0.240 },
+  ];
+
+  // Reuse the same CPF employee contribution rate bands as the CPF Contribution Calculator
+  const CPF_EMPLOYEE_RATE_BRACKETS = [
+    { min: 0,  max: 55, rate: 0.20 },
+    { min: 55, max: 60, rate: 0.18 },
+    { min: 60, max: 65, rate: 0.125 },
+    { min: 65, max: 70, rate: 0.075 },
+    { min: 70, max: 999, rate: 0.05 },
+  ];
+  const ANNUAL_CPF_CEILING = 102000; // approx annual OW+AW ceiling
+  const RELIEF_CAP = 80000;
+
+  function fmt(n){ return '$' + Math.round(n).toLocaleString('en-SG'); }
+
+  function employeeCpfRate(age){
+    for(const b of CPF_EMPLOYEE_RATE_BRACKETS){
+      if(age > b.min && age <= b.max) return b.rate;
+      if(age <= 55 && b.min === 0) return b.rate;
+    }
+    return CPF_EMPLOYEE_RATE_BRACKETS[CPF_EMPLOYEE_RATE_BRACKETS.length - 1].rate;
+  }
+
+  function calcTax(chargeable){
+    let remaining = chargeable;
+    let prev = 0;
+    let tax = 0;
+    for(const tier of TAX_BRACKETS){
+      const band = tier.upTo - prev;
+      const amt = Math.min(remaining, band);
+      if(amt <= 0) break;
+      tax += amt * tier.rate;
+      remaining -= amt;
+      prev = tier.upTo;
+      if(remaining <= 0) break;
+    }
+    return tax;
+  }
+
+  function calc(){
+    const income = parseFloat(document.getElementById('it-income').value);
+    const age = parseFloat(document.getElementById('it-age').value);
+    const otherReliefs = parseFloat(document.getElementById('it-other-reliefs').value) || 0;
+
+    const statusLine = document.getElementById('itStatusLine');
+    const ledgerRows = document.getElementById('itLedgerRows');
+
+    if(!income || income <= 0 || !age || age <= 0){
+      statusLine.textContent = "Enter your income and age to estimate your tax bill.";
+      ledgerRows.style.display = 'none';
+      return;
+    }
+
+    const cpfRate = employeeCpfRate(age);
+    const cpfRelief = cpfRate * Math.min(income, ANNUAL_CPF_CEILING);
+    const totalReliefs = Math.min(cpfRelief + otherReliefs, RELIEF_CAP);
+    const chargeable = Math.max(0, income - totalReliefs);
+    const tax = calcTax(chargeable);
+    const effectiveRate = income > 0 ? (tax / income) * 100 : 0;
+
+    document.getElementById('itCpfRelief').textContent = fmt(cpfRelief);
+    document.getElementById('itTotalReliefs').textContent = fmt(totalReliefs);
+    document.getElementById('itChargeable').textContent = fmt(chargeable);
+    document.getElementById('itEffectiveRate').textContent = effectiveRate.toFixed(1) + '%';
+    document.getElementById('itTaxPayable').textContent = fmt(tax);
+
+    statusLine.innerHTML = totalReliefs >= RELIEF_CAP
+      ? `Your reliefs hit the <b>$80,000 annual cap</b> — any further reliefs claimed won't reduce your tax further.`
+      : `Based on a chargeable income of <b>${fmt(chargeable)}</b>, your estimated tax works out to about <b>${effectiveRate.toFixed(1)}%</b> of your gross income.`;
+
+    ledgerRows.style.display = 'block';
+  }
+
+  ['it-income','it-age','it-other-reliefs'].forEach(id => {
+    document.getElementById(id).addEventListener('input', calc);
+  });
+</script>
+
+<a class="fb-btn" href="chop-feedback.html" style="text-decoration:none;">✎ Feedback</a>
+
+<script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "4fcc4037ceb54a8795588df3465c7522"}'></script>
+</body>
+</html>

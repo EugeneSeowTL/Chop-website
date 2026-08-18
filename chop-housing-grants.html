@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CHOP. — CPF Housing Grants Checker</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='44' fill='none' stroke='%23B4382A' stroke-width='7'/%3E%3Ctext x='50' y='64' font-size='44' text-anchor='middle' fill='%23B4382A' font-family='Georgia,serif' font-weight='700'%3EC%3C/text%3E%3C/svg%3E">
+<meta name="description" content="Check which HDB CPF housing grants you may be eligible for — Enhanced CPF Housing Grant, Family Grant, and Proximity Housing Grant — free, no SingPass needed.">
+<meta property="og:title" content="CPF Housing Grants Checker — CHOP.">
+<meta property="og:description" content="Check which HDB CPF housing grants you may be eligible for — Enhanced CPF Housing Grant, Family Grant, and Proximity Housing Grant.">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=IBM+Plex+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#0F2B3D; --navy-2:#163A4F; --navy-3:#0A1F2C;
+    --paper:#F5EFE0; --paper-line:#D8CDB0; --paper-2:#EDE4CD;
+    --brass:#C79A3D; --brass-soft:#DDBB74;
+    --stamp:#B4382A; --stamp-dark:#8F2A1F;
+    --ink:#1C1B19; --ink-soft:#5B5648; --mint:#3F6B4C;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--navy);color:var(--paper);font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased;}
+  a{color:inherit;text-decoration:none;}
+  header{display:flex;align-items:center;justify-content:space-between;padding:26px 6vw;}
+  .logo{font-family:'Fraunces',serif;font-weight:700;font-size:24px;}
+  .logo span{color:var(--brass);}
+  .back{font-family:'IBM Plex Mono',monospace;font-size:13px;opacity:0.75;}
+  .back:hover{opacity:1;}
+  .section-wrap{max-width:920px;margin:0 auto;padding:2vh 6vw 8vh;}
+  .section-label{font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:0.14em;color:var(--brass-soft);text-transform:uppercase;text-align:center;margin-bottom:10px;}
+  h1.section-title{font-family:'Fraunces',serif;font-weight:600;font-size:clamp(28px,4vw,40px);text-align:center;margin:0 0 12px;}
+  p.section-sub{text-align:center;color:#C9C0A9;max-width:56ch;margin:0 auto 18px;font-size:15.5px;line-height:1.6;}
+  .rates-badge{display:inline-flex;align-items:center;gap:6px;font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:0.04em;color:var(--brass-soft);background:rgba(199,154,61,0.12);border:1px solid rgba(199,154,61,0.3);padding:6px 14px;border-radius:14px;margin:0 auto 12px;display:flex;width:fit-content;}
+  .warn-badge{display:flex;align-items:flex-start;gap:8px;font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:#F0D9B5;background:rgba(180,56,42,0.18);border:1px solid rgba(180,56,42,0.4);padding:12px 16px;border-radius:6px;margin:0 auto 32px;max-width:640px;line-height:1.6;}
+
+  .passbook{background:var(--paper);color:var(--ink);border-radius:4px;box-shadow:0 40px 80px -30px rgba(0,0,0,0.6);overflow:hidden;}
+  .perforation{height:22px;background:repeating-linear-gradient(90deg, var(--navy) 0 7px, transparent 7px 16px);}
+  .passbook-inner{padding:38px 42px 42px;}
+  @media (max-width:640px){ .passbook-inner{padding:26px 20px 32px;} }
+  .pb-topline{display:flex;justify-content:space-between;align-items:baseline;font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--ink-soft);border-bottom:2px solid var(--ink);padding-bottom:14px;margin-bottom:20px;letter-spacing:0.04em;}
+  .pb-topline .book-title{font-family:'Fraunces',serif;font-weight:600;font-size:19px;color:var(--ink);letter-spacing:0;}
+
+  .field-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px 24px;margin-bottom:8px;}
+  @media (max-width:640px){ .field-grid{grid-template-columns:1fr;} }
+  .field{display:flex;align-items:center;justify-content:space-between;border-bottom:1px dashed var(--paper-line);padding:12px 0;gap:12px;}
+  .field label{font-size:13.5px;color:var(--ink-soft);}
+  .field .cur{font-family:'IBM Plex Mono',monospace;color:var(--ink-soft);margin-right:6px;font-size:13px;}
+  .field input{width:130px;text-align:right;border:none;background:transparent;font-family:'IBM Plex Mono',monospace;font-size:15px;font-weight:600;color:var(--ink);outline:none;padding:2px 0;border-bottom:1px solid transparent;}
+  .field input:focus{border-bottom:1px solid var(--stamp);}
+  .field select{
+    border:none;background:transparent;font-family:'IBM Plex Mono',monospace;font-size:14px;font-weight:600;color:var(--ink);
+    outline:none;padding:2px 0;width:190px;text-align:right;-webkit-appearance:none;appearance:none;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%235B5648'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right center;padding-right:16px;
+  }
+
+  .status-line{font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--ink-soft);background:var(--paper-2);border-radius:3px;padding:12px 16px;margin:18px 0 6px;line-height:1.6;}
+  .status-line b{color:var(--ink);}
+
+  .ledger-rows{margin-top:20px;border-top:2px solid var(--ink);padding-top:6px;}
+  .ledger-row{display:flex;justify-content:space-between;align-items:baseline;padding:11px 0;border-bottom:1px dashed var(--paper-line);font-family:'IBM Plex Mono',monospace;font-size:14px;}
+  .ledger-row .desc{color:var(--ink-soft);}
+  .ledger-row .amt{font-weight:600;}
+  .ledger-row.total{border-bottom:none;border-top:2px solid var(--ink);margin-top:4px;padding-top:16px;font-size:16px;}
+  .ledger-row.total .amt{color:var(--mint);font-family:'Fraunces',serif;font-size:22px;font-weight:600;}
+  .ledger-row.excluded .amt{color:var(--stamp-dark);}
+
+  .pb-hint{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--ink-soft);margin-top:16px;opacity:0.85;line-height:1.6;}
+  .pb-hint a{color:var(--stamp-dark);text-decoration:underline;}
+
+  .tabs-row{max-width:920px;margin:38px auto 0;display:flex;gap:10px;flex-wrap:wrap;justify-content:center;}
+  .tab-chip{font-family:'IBM Plex Mono',monospace;font-size:12.5px;padding:11px 18px;border-radius:20px;border:1px solid rgba(245,239,224,0.22);color:var(--paper);opacity:0.85;display:flex;align-items:center;gap:8px;}
+  .tab-chip.active{background:var(--brass);color:var(--navy-3);border-color:var(--brass);opacity:1;font-weight:600;}
+  .tab-chip .paid{font-size:9.5px;background:var(--brass);color:var(--navy-3);padding:2px 6px;border-radius:8px;font-weight:700;}
+
+  footer{border-top:1px solid rgba(245,239,224,0.12);padding:34px 6vw;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:#9C927C;}
+
+  .fb-btn{position:fixed;right:24px;bottom:24px;z-index:50;font-family:'IBM Plex Mono',monospace;font-size:12.5px;letter-spacing:0.04em;background:var(--stamp);color:#FBF0E7;border:none;padding:13px 20px;border-radius:24px;cursor:pointer;box-shadow:0 12px 30px -10px rgba(0,0,0,0.6);display:flex;align-items:center;gap:8px;transition:transform .15s, background .2s;}
+  .fb-btn:hover{background:var(--stamp-dark);transform:translateY(-2px);}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">CHOP<span>.</span></div>
+  <a class="back" href="index.html">← Back home</a>
+</header>
+
+<div class="section-wrap">
+  <div class="section-label">Tool 09 — Free</div>
+  <h1 class="section-title">CPF Housing Grants Checker</h1>
+  <p class="section-sub">See which HDB grants you may qualify for and roughly how much — Enhanced CPF Housing Grant, Family Grant, and Proximity Housing Grant.</p>
+  <div class="rates-badge">🗓 Figures current as of August 2026 — rates change most years, check before relying on this for a major decision</div>
+  <div class="warn-badge">⚠ Grant eligibility has real nuances (family nucleus, first-timer status, 30-month property disposal rule, income averaging) that a simple checker can't fully capture. Treat this as a rough indication — apply for your official <a href="https://homes.hdb.gov.sg/home/finding-a-flat" target="_blank" rel="noopener" style="color:#F0D9B5;text-decoration:underline;">HFE letter</a> from HDB for your real, definitive figure.</div>
+
+  <div class="passbook">
+    <div class="perforation"></div>
+    <div class="passbook-inner">
+      <div class="pb-topline">
+        <span class="book-title">Grants Ledger</span>
+        <span>HDB/CPF RULES: 2026</span>
+      </div>
+
+      <div class="field-grid">
+        <div class="field">
+          <label>Flat type</label>
+          <select id="hg-flat-type">
+            <option value="bto">BTO / New flat</option>
+            <option value="resale">Resale flat</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Applicant type</label>
+          <select id="hg-applicant-type">
+            <option value="family">Family (couple/nucleus)</option>
+            <option value="singles">Single (35+, buying alone)</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>First-timer applicant?</label>
+          <select id="hg-first-timer">
+            <option value="yes">Yes, first-timer</option>
+            <option value="no">No, second-timer</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Avg. gross monthly household income</label>
+          <div><span class="cur">SGD</span><input type="number" inputmode="decimal" id="hg-income" placeholder="6000" /></div>
+        </div>
+        <div class="field" style="grid-column:1 / -1;">
+          <label>Living with/near parents or children?</label>
+          <select id="hg-proximity">
+            <option value="none">No</option>
+            <option value="same">Same flat or same estate (within 4km not needed)</option>
+            <option value="nearby">Within 4km</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="status-line" id="hgStatusLine">Fill in the fields above to see which grants you may qualify for.</div>
+
+      <div class="ledger-rows" id="hgLedgerRows" style="display:none;">
+        <div class="ledger-row" id="hgEhgRow"><span class="desc">Enhanced CPF Housing Grant (EHG)</span><span class="amt" id="hgEhgAmt">$0</span></div>
+        <div class="ledger-row" id="hgFamilyRow"><span class="desc">Family Grant (resale only)</span><span class="amt" id="hgFamilyAmt">$0</span></div>
+        <div class="ledger-row" id="hgPhgRow"><span class="desc">Proximity Housing Grant (resale only)</span><span class="amt" id="hgPhgAmt">$0</span></div>
+        <div class="ledger-row total"><span class="desc">Estimated total grants</span><span class="amt" id="hgTotalAmt">$0</span></div>
+      </div>
+
+      <div class="pb-hint">
+        EHG applies to both BTO and resale, tapering from a maximum of $120,000 (families) / $60,000 (singles) down to $0 at the income ceiling ($9,000 families / $4,500 singles) — shown here as a straight-line taper, not HDB's actual stepped table, so treat it as indicative. Family Grant and Proximity Housing Grant apply to resale purchases only. Family Grant assumes a $14,000 income ceiling (up to $80,000) — extended families buying with parents get a higher $21,000 ceiling, not modelled here. Second-timers typically receive a reduced amount (e.g. Half-Housing Grant) not calculated in this simplified version. Doesn't account for the 30-month private property disposal rule, non-citizen spouse schemes, or Step-Up Grant eligibility. Confirm your real entitlement via your <a href="https://homes.hdb.gov.sg/home/finding-a-flat" target="_blank" rel="noopener">HFE letter</a> or HDB directly.
+      </div>
+    </div>
+  </div>
+
+  <div class="tabs-row">
+    <a class="tab-chip" href="chop-income.html" style="text-decoration:none;">Income &amp; Spend</a>
+    <a class="tab-chip" href="chop-cpf.html" style="text-decoration:none;">CPF Contribution</a>
+    <a class="tab-chip" href="chop-car-loan.html" style="text-decoration:none;">Car Loan</a>
+    <a class="tab-chip" href="chop-hdb.html" style="text-decoration:none;">HDB Affordability</a>
+    <a class="tab-chip" href="chop-stamp-duty.html" style="text-decoration:none;">Stamp Duty</a>
+    <a class="tab-chip" href="chop-income-tax.html" style="text-decoration:none;">Income Tax</a>
+    <div class="tab-chip active">Housing Grants</div>
+    <a class="tab-chip" href="chop-cv.html" style="text-decoration:none;">CV Tools</a>
+    <a class="tab-chip" href="chop-planner.html" style="text-decoration:none;">Financial Planner <span class="paid">paid</span></a>
+  </div>
+</div>
+
+<footer>A Singapore money toolkit — free tools, honest maths, no long story. · <a href="chop-terms.html" style="text-decoration:underline;">Terms &amp; Disclaimer</a></footer>
+
+<script>
+  function fmt(n){ return '$' + Math.round(n).toLocaleString('en-SG'); }
+
+  function ehgAmount(income, isSingle){
+    const ceiling = isSingle ? 4500 : 9000;
+    const max = isSingle ? 60000 : 120000;
+    if(income >= ceiling) return 0;
+    if(income <= 0) return max;
+    // Simplified straight-line taper — HDB's real table is stepped, not linear
+    return Math.round(max * (1 - income / ceiling));
+  }
+
+  function familyGrantAmount(income){
+    const ceiling = 14000;
+    const max = 80000;
+    if(income >= ceiling) return 0;
+    if(income <= 0) return max;
+    return Math.round(max * (1 - income / ceiling));
+  }
+
+  function calc(){
+    const flatType = document.getElementById('hg-flat-type').value;
+    const applicantType = document.getElementById('hg-applicant-type').value;
+    const firstTimer = document.getElementById('hg-first-timer').value === 'yes';
+    const income = parseFloat(document.getElementById('hg-income').value);
+    const proximity = document.getElementById('hg-proximity').value;
+
+    const statusLine = document.getElementById('hgStatusLine');
+    const ledgerRows = document.getElementById('hgLedgerRows');
+
+    if(isNaN(income) || income < 0){
+      statusLine.textContent = "Fill in the fields above to see which grants you may qualify for.";
+      ledgerRows.style.display = 'none';
+      return;
+    }
+
+    const isSingle = applicantType === 'singles';
+    const isResale = flatType === 'resale';
+
+    let ehg = 0, family = 0, phg = 0;
+    let notes = [];
+
+    if(firstTimer){
+      ehg = ehgAmount(income, isSingle);
+      if(ehg === 0 && income > 0) notes.push('income is above the EHG ceiling');
+    } else {
+      notes.push('EHG requires first-timer status');
+    }
+
+    if(isResale && firstTimer && !isSingle){
+      family = familyGrantAmount(income);
+    }
+
+    if(isResale && proximity !== 'none'){
+      phg = proximity === 'same' ? 30000 : 20000;
+    }
+
+    document.getElementById('hgEhgAmt').textContent = fmt(ehg);
+    document.getElementById('hgFamilyRow').style.display = isResale ? 'flex' : 'none';
+    document.getElementById('hgFamilyAmt').textContent = fmt(family);
+    document.getElementById('hgPhgRow').style.display = isResale ? 'flex' : 'none';
+    document.getElementById('hgPhgAmt').textContent = fmt(phg);
+
+    const total = ehg + family + phg;
+    document.getElementById('hgTotalAmt').textContent = fmt(total);
+
+    if(total > 0){
+      statusLine.innerHTML = `Estimated total grants: <b>${fmt(total)}</b>. This is a rough indication only — apply for your HFE letter for the real figure.`;
+    } else {
+      statusLine.innerHTML = `Based on what you've entered, you may not qualify for these grants ${notes.length ? '(' + notes.join(', ') + ')' : ''} — but eligibility has nuances this checker can't fully capture, so it's still worth applying for your HFE letter to confirm.`;
+    }
+
+    ledgerRows.style.display = 'block';
+  }
+
+  ['hg-flat-type','hg-applicant-type','hg-first-timer','hg-income','hg-proximity'].forEach(id => {
+    document.getElementById(id).addEventListener('input', calc);
+    document.getElementById(id).addEventListener('change', calc);
+  });
+</script>
+
+<a class="fb-btn" href="chop-feedback.html" style="text-decoration:none;">✎ Feedback</a>
+
+<script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "4fcc4037ceb54a8795588df3465c7522"}'></script>
+</body>
+</html>

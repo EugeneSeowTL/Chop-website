@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CHOP. — Car Loan Calculator</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='44' fill='none' stroke='%23B4382A' stroke-width='7'/%3E%3Ctext x='50' y='64' font-size='44' text-anchor='middle' fill='%23B4382A' font-family='Georgia,serif' font-weight='700'%3EC%3C/text%3E%3C/svg%3E">
+<meta name="description" content="Free Singapore car loan calculator — work out your LTV cap, downpayment, and monthly instalment using MAS rules.">
+<meta property="og:title" content="Car Loan Calculator — CHOP.">
+<meta property="og:description" content="Free Singapore car loan calculator — work out your LTV cap, downpayment, and monthly instalment using MAS rules.">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=IBM+Plex+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#0F2B3D; --navy-2:#163A4F; --navy-3:#0A1F2C;
+    --paper:#F5EFE0; --paper-line:#D8CDB0; --paper-2:#EDE4CD;
+    --brass:#C79A3D; --brass-soft:#DDBB74;
+    --stamp:#B4382A; --stamp-dark:#8F2A1F;
+    --ink:#1C1B19; --ink-soft:#5B5648; --mint:#3F6B4C;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--navy);color:var(--paper);font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased;}
+  a{color:inherit;text-decoration:none;}
+
+  header{display:flex;align-items:center;justify-content:space-between;padding:26px 6vw;}
+  .logo{font-family:'Fraunces',serif;font-weight:700;font-size:24px;}
+  .logo span{color:var(--brass);}
+  .back{font-family:'IBM Plex Mono',monospace;font-size:13px;opacity:0.75;}
+  .back:hover{opacity:1;}
+
+  .section-wrap{max-width:920px;margin:0 auto;padding:2vh 6vw 8vh;}
+  .section-label{font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:0.14em;color:var(--brass-soft);text-transform:uppercase;text-align:center;margin-bottom:10px;}
+  h1.section-title{font-family:'Fraunces',serif;font-weight:600;font-size:clamp(28px,4vw,40px);text-align:center;margin:0 0 12px;}
+  p.section-sub{text-align:center;color:#C9C0A9;max-width:52ch;margin:0 auto 44px;font-size:15.5px;line-height:1.6;}
+  .rates-badge{display:inline-flex;align-items:center;gap:6px;font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:0.04em;color:var(--brass-soft);background:rgba(199,154,61,0.12);border:1px solid rgba(199,154,61,0.3);padding:6px 14px;border-radius:14px;margin:0 auto 32px;display:flex;width:fit-content;}
+
+  .passbook{background:var(--paper);color:var(--ink);border-radius:4px;box-shadow:0 40px 80px -30px rgba(0,0,0,0.6);overflow:hidden;}
+  .perforation{height:22px;background:repeating-linear-gradient(90deg, var(--navy) 0 7px, transparent 7px 16px);}
+  .passbook-inner{padding:38px 42px 42px;}
+  @media (max-width:640px){ .passbook-inner{padding:26px 20px 32px;} }
+
+  .pb-topline{display:flex;justify-content:space-between;align-items:baseline;font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--ink-soft);border-bottom:2px solid var(--ink);padding-bottom:14px;margin-bottom:22px;letter-spacing:0.04em;}
+  .pb-topline .book-title{font-family:'Fraunces',serif;font-weight:600;font-size:19px;color:var(--ink);letter-spacing:0;}
+
+  .field-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px 24px;margin-bottom:8px;}
+  @media (max-width:640px){ .field-grid{grid-template-columns:1fr;} }
+  .field{display:flex;align-items:center;justify-content:space-between;border-bottom:1px dashed var(--paper-line);padding:12px 0;gap:12px;}
+  .field label{font-size:13.5px;color:var(--ink-soft);}
+  .field .cur{font-family:'IBM Plex Mono',monospace;color:var(--ink-soft);margin-right:6px;font-size:13px;}
+  .field input, .field select{
+    border:none;background:transparent;font-family:'IBM Plex Mono',monospace;font-size:15px;font-weight:600;color:var(--ink);
+    outline:none;padding:2px 0;border-bottom:1px solid transparent;
+  }
+  .field input{width:120px;text-align:right;}
+  .field input:focus, .field select:focus{border-bottom:1px solid var(--stamp);}
+  .field select{width:120px;text-align:right;-webkit-appearance:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%235B5648'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right center;padding-right:16px;}
+
+  .status-line{font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--ink-soft);background:var(--paper-2);border-radius:3px;padding:12px 16px;margin:18px 0 6px;}
+  .status-line b{color:var(--ink);}
+
+  .ledger-rows{margin-top:20px;border-top:2px solid var(--ink);padding-top:6px;}
+  .ledger-row{display:flex;justify-content:space-between;align-items:baseline;padding:11px 0;border-bottom:1px dashed var(--paper-line);font-family:'IBM Plex Mono',monospace;font-size:14px;}
+  .ledger-row .desc{color:var(--ink-soft);}
+  .ledger-row .amt{font-weight:600;}
+  .ledger-row.total{border-bottom:none;border-top:2px solid var(--ink);margin-top:4px;padding-top:16px;font-size:16px;}
+  .ledger-row.total .amt{color:var(--mint);font-family:'Fraunces',serif;font-size:22px;font-weight:600;}
+
+  .pb-hint{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--ink-soft);margin-top:16px;opacity:0.85;line-height:1.6;}
+
+  .tabs-row{max-width:920px;margin:38px auto 0;display:flex;gap:10px;flex-wrap:wrap;justify-content:center;}
+  .tab-chip{font-family:'IBM Plex Mono',monospace;font-size:12.5px;padding:11px 18px;border-radius:20px;border:1px solid rgba(245,239,224,0.22);color:var(--paper);opacity:0.85;display:flex;align-items:center;gap:8px;}
+  .tab-chip.active{background:var(--brass);color:var(--navy-3);border-color:var(--brass);opacity:1;font-weight:600;}
+  .tab-chip .soon{font-size:9.5px;background:rgba(245,239,224,0.14);padding:2px 6px;border-radius:8px;}
+  .tab-chip .paid{font-size:9.5px;background:var(--brass);color:var(--navy-3);padding:2px 6px;border-radius:8px;font-weight:700;}
+
+  /* ---------- PREMIUM ---------- */
+  .premium-block{margin-top:44px;background:var(--navy-2);border-radius:4px;padding:2px;position:relative;overflow:hidden;}
+  .premium-inner{background:var(--paper);color:var(--ink);border-radius:3px;padding:34px 36px;position:relative;}
+  @media (max-width:640px){ .premium-inner{padding:26px 20px;} }
+  .premium-badge{display:inline-flex;align-items:center;gap:6px;font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:0.08em;background:var(--brass);color:var(--navy-3);padding:4px 10px;border-radius:12px;font-weight:700;margin-bottom:14px;}
+  .sgd-badge{display:inline-flex;align-items:center;gap:7px;font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:0.08em;background:var(--stamp);color:#FBF0E7;padding:5px 12px;border-radius:3px;font-weight:700;margin-bottom:12px;text-transform:uppercase;}
+  .sgd-badge .sgd-flag{font-size:11px;}
+  .premium-title{font-family:'Fraunces',serif;font-weight:600;font-size:22px;margin:0 0 8px;}
+  .premium-sub{font-size:14px;color:var(--ink-soft);line-height:1.6;margin:0 0 24px;max-width:56ch;}
+  .locked-fields{position:relative;}
+  .locked-fields .field-grid{filter:blur(3.5px);opacity:0.55;pointer-events:none;user-select:none;}
+  .locked-overlay{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:14px;padding:20px;}
+  .locked-overlay .lock-icon{font-size:22px;}
+  .locked-overlay p{font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--ink-soft);max-width:38ch;margin:0;}
+  .premium-cta{font-family:'IBM Plex Mono',monospace;font-size:13.5px;letter-spacing:0.03em;background:var(--stamp);color:#FBF0E7;border:none;padding:14px 26px;border-radius:2px;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:8px;transition:background .2s;}
+  .premium-cta:hover{background:var(--stamp-dark);}
+  .premium-price{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--ink-soft);margin-top:10px;}
+
+  footer{border-top:1px solid rgba(245,239,224,0.12);padding:34px 6vw;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:#9C927C;}
+
+  /* ---------- FEEDBACK ---------- */
+  .fb-btn{position:fixed;right:24px;bottom:24px;z-index:50;font-family:'IBM Plex Mono',monospace;font-size:12.5px;letter-spacing:0.04em;background:var(--stamp);color:#FBF0E7;border:none;padding:13px 20px;border-radius:24px;cursor:pointer;box-shadow:0 12px 30px -10px rgba(0,0,0,0.6);display:flex;align-items:center;gap:8px;transition:transform .15s, background .2s;}
+  .fb-btn:hover{background:var(--stamp-dark);transform:translateY(-2px);}
+  .fb-overlay{position:fixed;inset:0;background:rgba(10,31,44,0.72);z-index:60;display:none;align-items:center;justify-content:center;padding:20px;}
+  .fb-overlay.show{display:flex;}
+  .fb-card{background:var(--paper);color:var(--ink);border-radius:4px;max-width:420px;width:100%;box-shadow:0 40px 80px -20px rgba(0,0,0,0.6);overflow:hidden;}
+  .fb-card .perforation{height:16px;background:repeating-linear-gradient(90deg, var(--navy) 0 6px, transparent 6px 13px);}
+  .fb-card-inner{padding:26px 26px 24px;}
+  .fb-card-title{font-family:'Fraunces',serif;font-weight:600;font-size:19px;margin:0 0 6px;}
+  .fb-card-sub{font-size:13px;color:var(--ink-soft);margin:0 0 18px;line-height:1.5;}
+  .fb-field{margin-bottom:14px;}
+  .fb-field label{display:block;font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:0.06em;color:var(--ink-soft);text-transform:uppercase;margin-bottom:6px;}
+  .fb-field select, .fb-field textarea, .fb-field input{width:100%;border:1px solid var(--paper-line);background:var(--paper-2);border-radius:2px;font-family:'Inter',sans-serif;font-size:13.5px;color:var(--ink);padding:10px 12px;outline:none;box-sizing:border-box;}
+  .fb-field select{-webkit-appearance:none;appearance:none;font-family:'IBM Plex Mono',monospace;}
+  .fb-field textarea{resize:vertical;min-height:80px;font-family:'Inter',sans-serif;}
+  .fb-field select:focus, .fb-field textarea:focus, .fb-field input:focus{border-color:var(--stamp);}
+  .fb-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:6px;}
+  .fb-cancel{font-family:'IBM Plex Mono',monospace;font-size:12.5px;background:transparent;border:none;color:var(--ink-soft);cursor:pointer;padding:10px 14px;}
+  .fb-submit{font-family:'IBM Plex Mono',monospace;font-size:12.5px;background:var(--stamp);color:#FBF0E7;border:none;border-radius:2px;padding:11px 18px;cursor:pointer;}
+  .fb-submit:hover{background:var(--stamp-dark);}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">CHOP<span>.</span></div>
+  <a class="back" href="index.html">← Back home</a>
+</header>
+
+<div class="section-wrap">
+  <div class="section-label">Tool 03 — Free</div>
+  <h1 class="section-title">Car Loan Calculator</h1>
+  <p class="section-sub">Work out your maximum loan, minimum downpayment, and monthly instalment — based on MAS's loan-to-value and tenure rules.</p>
+  <div class="rates-badge">🗓 Figures current as of August 2026 — rates change most years, check before relying on this for a major decision</div>
+
+  <div class="passbook">
+    <div class="perforation"></div>
+    <div class="passbook-inner">
+      <div class="pb-topline">
+        <span class="book-title">Car Loan Ledger</span>
+        <span>MAS RULES: 2026</span>
+      </div>
+
+      <div class="field-grid">
+        <div class="field">
+          <label>Purchase price</label>
+          <div><span class="cur">SGD</span><input type="number" inputmode="decimal" id="price" placeholder="120000" /></div>
+        </div>
+        <div class="field">
+          <label>Open Market Value (OMV)</label>
+          <div><span class="cur">SGD</span><input type="number" inputmode="decimal" id="omv" placeholder="22000" /></div>
+        </div>
+        <div class="field">
+          <label>Interest rate (flat, p.a.)</label>
+          <div><input type="number" inputmode="decimal" id="rate" placeholder="2.78" style="width:80px;" /><span class="cur" style="margin-left:4px;">%</span></div>
+        </div>
+        <div class="field">
+          <label>Loan tenure</label>
+          <select id="tenure">
+            <option value="1">1 year</option>
+            <option value="2">2 years</option>
+            <option value="3">3 years</option>
+            <option value="4">4 years</option>
+            <option value="5" selected>5 years</option>
+            <option value="6">6 years</option>
+            <option value="7">7 years</option>
+            <option value="8">8 years*</option>
+            <option value="9">9 years*</option>
+            <option value="10">10 years*</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="status-line" id="statusLine">Enter the purchase price and OMV to see your loan-to-value cap.</div>
+      <div class="status-line" id="tenureWarning" style="display:none;background:rgba(180,56,42,0.12);color:var(--stamp-dark);"></div>
+
+      <div class="ledger-rows" id="ledgerRows" style="display:none;">
+        <div class="ledger-row"><span class="desc" id="ltvLabel">Max loan (LTV cap)</span><span class="amt" id="loanAmt">$0</span></div>
+        <div class="ledger-row"><span class="desc">Minimum downpayment (cash/CPF*)</span><span class="amt" id="downAmt">$0</span></div>
+        <div class="ledger-row"><span class="desc">Total interest over tenure</span><span class="amt" id="interestAmt">$0</span></div>
+        <div class="ledger-row total"><span class="desc">Monthly instalment</span><span class="amt" id="monthlyAmt">$0</span></div>
+      </div>
+
+      <div class="pb-hint">
+        Based on MAS rules: max loan-to-value is 70% of purchase price if OMV ≤ $20,000, or 60% if OMV > $20,000, with bank loans capped at a 7-year tenure. *Tenures of 8–10 years aren't standard MAS-regulated bank car loans — they'd only come from private/non-bank financing, so treat those figures as illustrative, not a bank quote. Most banks quote a flat interest rate, so total interest = loan × rate × years. CPF cannot be used for car financing — downpayment must be cash or bank funds. Actual bank valuation, approval, and rate depend on your income and credit profile — treat this as an estimate, not an offer.
+      </div>
+    </div>
+  </div>
+
+  <div class="premium-block">
+    <div class="premium-inner">
+      <span class="premium-badge">★ Premium</span>
+      <h2 class="premium-title">Running Cost Estimator</h2>
+      <p class="premium-sub">The loan is only part of it. Pull your fuel or charging, parking, and maintenance costs into one number alongside the loan instalment above — the total most people never actually add up.</p>
+
+      <div class="locked-fields">
+        <div class="field-grid">
+          <div class="field"><label>Fuel type</label><div>
+            <select disabled id="rc-fuel" style="width:130px;text-align:right;font-family:'IBM Plex Mono',monospace;font-weight:600;border:none;background:transparent;">
+              <option value="petrol">Petrol</option>
+              <option value="hybrid">Hybrid</option>
+              <option value="ev">EV</option>
+            </select>
+          </div></div>
+          <div class="field"><label>Monthly mileage (km)</label><div><input type="number" disabled id="rc-mileage" placeholder="1200" style="width:100px;" /></div></div>
+          <div class="field"><label>Fuel/charging price</label><div><input type="number" disabled id="rc-price" placeholder="2.90" style="width:90px;" /><span class="cur" style="margin-left:4px;">/L or /kWh</span></div></div>
+          <div class="field"><label>Home parking</label><div><span class="cur">SGD</span><input type="number" disabled id="rc-park-home" placeholder="110" /></div></div>
+          <div class="field"><label>Work/other parking</label><div><span class="cur">SGD</span><input type="number" disabled id="rc-park-work" placeholder="120" /></div></div>
+          <div class="field"><label>Est. annual maintenance</label><div><span class="cur">SGD</span><input type="number" disabled id="rc-maintenance" placeholder="800" /></div></div>
+        </div>
+
+        <button class="cv-btn" id="rc-calc-btn" disabled style="margin-top:16px;">Estimate my running cost</button>
+
+        <div id="rc-results" style="display:none;margin-top:20px;border-top:2px solid var(--ink);padding-top:16px;">
+          <div class="ledger-row"><span class="desc" id="rc-fuel-label">Fuel cost</span><span class="amt" id="rc-fuel-amt">$0</span></div>
+          <div class="ledger-row"><span class="desc">Parking (home + work)</span><span class="amt" id="rc-park-amt">$0</span></div>
+          <div class="ledger-row"><span class="desc">Maintenance (monthly share)</span><span class="amt" id="rc-maint-amt">$0</span></div>
+          <div class="ledger-row total"><span class="desc">Total monthly running cost</span><span class="amt" id="rc-total-amt">$0</span></div>
+          <div class="pb-hint" style="margin-top:14px;">Estimate assumes 8L/100km (petrol), 4.5L/100km (hybrid), or 15kWh/100km (EV) — actual consumption varies by model and driving style. Add this to your loan instalment above for your true monthly cost of ownership.</div>
+        </div>
+
+        <div class="locked-overlay">
+          <div class="lock-icon">🔒</div>
+          <p>Unlock to get your full monthly running cost — fuel/charging, parking, and maintenance — added on top of your loan instalment for a true total.</p>
+          <a class="premium-cta" href="#" id="premiumCta">Get Premium Access →</a>
+          <div class="premium-price">SGD 3.90, one-time</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="premium-block">
+    <div class="premium-inner">
+      <span class="premium-badge">★ Premium</span>
+      <div class="sgd-badge"><span class="sgd-flag">🇸🇬</span>SGDecision</div>
+      <h2 class="premium-title">Lease or Buy?</h2>
+      <p class="premium-sub">Compares the total cost of buying (loan + running costs, minus what the car's worth when you sell) against leasing for the same period — uses your loan numbers from above automatically.</p>
+
+      <div class="locked-fields">
+        <div class="field-grid">
+          <div class="field"><label>Monthly lease payment</label><div><span class="cur">SGD</span><input type="number" disabled id="lb-lease-payment" placeholder="1500" /></div></div>
+          <div class="field"><label>Lease includes maintenance?</label><div>
+            <select disabled id="lb-lease-maint" style="width:80px;text-align:right;font-family:'IBM Plex Mono',monospace;font-weight:600;border:none;background:transparent;">
+              <option value="yes">Yes</option>
+              <option value="no">No</option>
+            </select>
+          </div></div>
+          <div class="field"><label>Holding period (if buying)</label><div><input type="number" disabled id="lb-holding" placeholder="5" style="width:70px;" /><span class="cur" style="margin-left:4px;">yrs</span></div></div>
+          <div class="field"><label>Est. resale value at end</label><div><span class="cur">SGD</span><input type="number" disabled id="lb-resale" placeholder="45000" /></div></div>
+          <div class="field"><label>Monthly fuel/parking cost</label><div><span class="cur">SGD</span><input type="number" disabled id="lb-fuel-parking" placeholder="400" /></div></div>
+          <div class="field"><label>Monthly maintenance cost</label><div><span class="cur">SGD</span><input type="number" disabled id="lb-maintenance" placeholder="70" /></div></div>
+        </div>
+
+        <button class="cv-btn" id="lb-calc-btn" disabled style="margin-top:16px;">Compare lease vs. buy</button>
+
+        <div id="lb-results" style="display:none;margin-top:20px;border-top:2px solid var(--ink);padding-top:16px;">
+          <div class="compare-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+            <div class="compare-col" style="background:var(--paper-2);border-radius:3px;padding:16px 18px;">
+              <h4 style="font-family:'Fraunces',serif;font-size:15px;font-weight:600;margin:0 0 10px;color:var(--ink);">Buy</h4>
+              <div class="ledger-row"><span class="desc">Total over holding period</span><span class="amt" id="lb-buy-total">$0</span></div>
+              <div class="ledger-row"><span class="desc">Minus resale value</span><span class="amt" id="lb-buy-resale">$0</span></div>
+              <div class="ledger-row"><span class="desc">Ends with</span><span class="amt">A car you own</span></div>
+            </div>
+            <div class="compare-col" style="background:var(--paper-2);border-radius:3px;padding:16px 18px;">
+              <h4 style="font-family:'Fraunces',serif;font-size:15px;font-weight:600;margin:0 0 10px;color:var(--ink);">Lease</h4>
+              <div class="ledger-row"><span class="desc">Total over same period</span><span class="amt" id="lb-lease-total">$0</span></div>
+              <div class="ledger-row"><span class="desc">Ends with</span><span class="amt">Nothing to sell</span></div>
+            </div>
+          </div>
+          <div class="pb-hint" style="margin-top:14px;" id="lb-note"></div>
+        </div>
+
+        <div class="locked-overlay">
+          <div class="lock-icon">🔒</div>
+          <p>Unlock to see the true all-in cost of buying vs. leasing over your holding period — not just the monthly payment.</p>
+          <a class="premium-cta" href="#" id="premiumCta2">Get Premium Access →</a>
+          <div class="premium-price">SGD 3.90, one-time</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="tabs-row">
+    <a class="tab-chip" href="chop-income.html" style="text-decoration:none;">Income &amp; Spend</a>
+    <a class="tab-chip" href="chop-cpf.html" style="text-decoration:none;">CPF Contribution</a>
+    <div class="tab-chip active">Car Loan</div>
+    <a class="tab-chip" href="chop-hdb.html" style="text-decoration:none;">HDB Affordability</a>
+    <a class="tab-chip" href="chop-stamp-duty.html" style="text-decoration:none;">Stamp Duty</a>
+    <a class="tab-chip" href="chop-income-tax.html" style="text-decoration:none;">Income Tax</a>
+    <a class="tab-chip" href="chop-housing-grants.html" style="text-decoration:none;">Housing Grants</a>
+    <a class="tab-chip" href="chop-cv.html" style="text-decoration:none;">CV Tools</a>
+    <a class="tab-chip" href="chop-planner.html" style="text-decoration:none;">Financial Planner <span class="paid">paid</span></a>
+  </div>
+</div>
+
+<footer>A Singapore money toolkit — free tools, honest maths, no long story. · <a href="chop-terms.html" style="text-decoration:underline;">Terms & Disclaimer</a></footer>
+
+<script>
+  function fmt(n){ return '$' + Math.round(n).toLocaleString('en-SG'); }
+
+  const priceEl = document.getElementById('price');
+  const omvEl = document.getElementById('omv');
+  const rateEl = document.getElementById('rate');
+  const tenureEl = document.getElementById('tenure');
+  const statusLine = document.getElementById('statusLine');
+  const tenureWarning = document.getElementById('tenureWarning');
+  const ledgerRows = document.getElementById('ledgerRows');
+  const ltvLabel = document.getElementById('ltvLabel');
+  const loanAmt = document.getElementById('loanAmt');
+  const downAmt = document.getElementById('downAmt');
+  const interestAmt = document.getElementById('interestAmt');
+  const monthlyAmt = document.getElementById('monthlyAmt');
+
+  function calc(){
+    const price = parseFloat(priceEl.value);
+    const omv = parseFloat(omvEl.value);
+    let rate = parseFloat(rateEl.value);
+    const years = parseFloat(tenureEl.value);
+
+    if(!price || price <= 0 || !omv || omv <= 0){
+      statusLine.textContent = "Enter the purchase price and OMV to see your loan-to-value cap.";
+      ledgerRows.style.display = 'none';
+      return;
+    }
+
+    if(!rate || rate <= 0) rate = 2.78; // typical 2026 bank flat rate default
+
+    const ltvPct = omv > 20000 ? 0.60 : 0.70;
+    const maxLoan = price * ltvPct;
+    const downpayment = price - maxLoan;
+    const totalInterest = maxLoan * (rate / 100) * years;
+    const totalRepayment = maxLoan + totalInterest;
+    const monthly = totalRepayment / (years * 12);
+
+    statusLine.innerHTML = `OMV of ${fmt(omv)} means your loan-to-value cap is <b>${Math.round(ltvPct*100)}%</b> of the purchase price.`;
+    ltvLabel.textContent = `Max loan (${Math.round(ltvPct*100)}% LTV)`;
+    loanAmt.textContent = fmt(maxLoan);
+    downAmt.textContent = fmt(downpayment);
+    interestAmt.textContent = fmt(totalInterest);
+    monthlyAmt.textContent = fmt(monthly);
+    ledgerRows.style.display = 'block';
+
+    if(years > 7){
+      tenureWarning.style.display = 'block';
+      tenureWarning.innerHTML = `⚠ A ${years}-year tenure exceeds MAS's 7-year cap for standard bank car loans. This figure only applies if you're using non-bank/private financing — a regular bank loan would need to be repaid within 7 years.`;
+    } else {
+      tenureWarning.style.display = 'none';
+    }
+  }
+
+  [priceEl, omvEl, rateEl, tenureEl].forEach(el => el.addEventListener('input', calc));
+  tenureEl.addEventListener('change', calc);
+
+  // TODO: replace with your real HitPay payment link once your account is approved
+  // ---------- Running Cost Estimator (Premium) ----------
+  const CONSUMPTION = { petrol: 8, hybrid: 4.5, ev: 15 }; // per 100km: L for petrol/hybrid, kWh for ev
+  const FUEL_LABEL = { petrol: 'Fuel cost (petrol)', hybrid: 'Fuel cost (hybrid)', ev: 'Charging cost (EV)' };
+
+  function fmtRC(n){ return '$' + Math.round(n).toLocaleString('en-SG'); }
+
+  document.getElementById('rc-calc-btn').addEventListener('click', function(){
+    const fuelType = document.getElementById('rc-fuel').value;
+    const mileage = parseFloat(document.getElementById('rc-mileage').value) || 0;
+    const price = parseFloat(document.getElementById('rc-price').value) || (fuelType === 'ev' ? 0.30 : 2.90);
+    const parkHome = parseFloat(document.getElementById('rc-park-home').value) || 0;
+    const parkWork = parseFloat(document.getElementById('rc-park-work').value) || 0;
+    const maintenanceAnnual = parseFloat(document.getElementById('rc-maintenance').value) || 0;
+
+    const consumption = CONSUMPTION[fuelType] || CONSUMPTION.petrol;
+    const fuelCost = (mileage / 100) * consumption * price;
+    const parkingTotal = parkHome + parkWork;
+    const maintenanceMonthly = maintenanceAnnual / 12;
+    const total = fuelCost + parkingTotal + maintenanceMonthly;
+
+    document.getElementById('rc-fuel-label').textContent = FUEL_LABEL[fuelType] || FUEL_LABEL.petrol;
+    document.getElementById('rc-fuel-amt').textContent = fmtRC(fuelCost);
+    document.getElementById('rc-park-amt').textContent = fmtRC(parkingTotal);
+    document.getElementById('rc-maint-amt').textContent = fmtRC(maintenanceMonthly);
+    document.getElementById('rc-total-amt').textContent = fmtRC(total);
+    document.getElementById('rc-results').style.display = 'block';
+  });
+
+  // ---------- Lease or Buy? (Premium) ----------
+  function fmtLB(n){
+    const sign = n < 0 ? '−' : '';
+    return sign + '$' + Math.abs(Math.round(n)).toLocaleString('en-SG');
+  }
+
+  document.getElementById('lb-calc-btn').addEventListener('click', function(){
+    // Pull the monthly instalment and downpayment from the free loan calculator above
+    const monthlyText = document.getElementById('monthlyAmt').textContent.replace(/[^0-9.]/g, '');
+    const downText = document.getElementById('downAmt').textContent.replace(/[^0-9.]/g, '');
+    const monthlyInstalment = parseFloat(monthlyText) || 0;
+    const downpayment = parseFloat(downText) || 0;
+
+    if(monthlyInstalment === 0){
+      alert('Run the loan calculator above first (enter purchase price and OMV) so we have your monthly instalment to compare against.');
+      return;
+    }
+
+    const leasePayment = parseFloat(document.getElementById('lb-lease-payment').value) || 0;
+    const leaseIncludesMaint = document.getElementById('lb-lease-maint').value === 'yes';
+    const holdingYears = parseFloat(document.getElementById('lb-holding').value) || 0;
+    const resale = parseFloat(document.getElementById('lb-resale').value) || 0;
+    const fuelParking = parseFloat(document.getElementById('lb-fuel-parking').value) || 0;
+    const maintenance = parseFloat(document.getElementById('lb-maintenance').value) || 0;
+
+    const heldMonths = holdingYears * 12;
+
+    const buyTotal = downpayment + (monthlyInstalment * heldMonths) + ((fuelParking + maintenance) * heldMonths) - resale;
+    const leaseMaintCost = leaseIncludesMaint ? 0 : (maintenance * heldMonths);
+    const leaseTotal = (leasePayment * heldMonths) + (fuelParking * heldMonths) + leaseMaintCost;
+
+    document.getElementById('lb-buy-total').textContent = fmtLB(downpayment + (monthlyInstalment * heldMonths) + ((fuelParking + maintenance) * heldMonths));
+    document.getElementById('lb-buy-resale').textContent = '−' + fmtLB(resale);
+    document.getElementById('lb-lease-total').textContent = fmtLB(leaseTotal);
+
+    const cheaper = buyTotal <= leaseTotal ? 'Buying' : 'Leasing';
+    const diff = Math.abs(buyTotal - leaseTotal);
+    document.getElementById('lb-note').innerHTML =
+      `<b>${cheaper}</b> comes out cheaper over ${holdingYears} year${holdingYears===1?'':'s'} by about ${fmtLB(diff)} in total, on these assumptions. This is a simplified comparison: buying assumes you keep paying the loan for the full holding period and sell at your estimated resale value; leasing assumes no ownership at the end. Actual resale value depends heavily on COE remaining and market conditions at time of sale — treat the resale figure as your own estimate, not a guarantee.`;
+
+    document.getElementById('lb-results').style.display = 'block';
+  });
+
+
+  // TODO: replace TIER1_LINK with your real Stripe Payment Link for the $3.90 tier once created
+  const TIER1_LINK = "https://buy.stripe.com/8x2bJ39fKb1E0gb8uDb7y04";
+  ['premiumCta', 'premiumCta2'].forEach(id => {
+    const el = document.getElementById(id);
+    el.addEventListener('click', function(e){
+      e.preventDefault();
+      if(TIER1_LINK){
+        window.open(TIER1_LINK, '_blank', 'noopener');
+      } else {
+        alert('Premium access isn\'t set up yet — check back soon!');
+      }
+    });
+  });
+</script>
+
+<a class="fb-btn" href="chop-feedback.html" style="text-decoration:none;">✎ Feedback</a>
+<!-- Cloudflare Web Analytics -->
+<script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "4fcc4037ceb54a8795588df3465c7522"}'></script>
+</body>
+</html>
